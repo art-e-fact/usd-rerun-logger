@@ -1,0 +1,23 @@
+[project]
+name = "usd-rerun-logger"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Andras Polgar", email = "andras@artefacts.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "pillow>=11.2.1",
+    "rerun-sdk>=0.23.1",
+    "usd-core>=25.11",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.7,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "types-usd>=24.5.2",
+]
