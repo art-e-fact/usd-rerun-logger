@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import fnmatch
 import os
 from pathlib import Path
 
@@ -11,9 +12,10 @@ from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade
 class UsdRerunLogger:
     """Visualize USD stages in Rerun."""
 
-    def __init__(self, stage: Usd.Stage):
+    def __init__(self):
         self.stage = None
         self._logger_id = None
+        self._path_filter = None
         self._logged_meshes = set()  # Track which meshes we've already logged
         self._last_transforms = {}  # Track last logged transforms for change detection
 
@@ -23,10 +25,33 @@ class UsdRerunLogger:
         logger_id: str = "isaac_rerun_logger",
         spawn=True,
         save_path: Path | None = None,
+        path_filter: str | list[str] | None = None,
     ):
-        """Initialize the Rerun logger with a USD stage."""
+        """
+        Initialize the Rerun logger with a USD stage.
+
+        Parameters
+        ----------
+        stage:
+            The USD stage to log.
+        logger_id:
+            The ID of the Rerun logger.
+        spawn:
+            Whether to spawn the Rerun viewer.
+        save_path:
+            Path to save the Rerun recording to.
+        path_filter:
+            Glob pattern(s) to filter USD paths to log.
+            Can be a single string or a list of strings.
+            Example: "/World/Robot/*" or ["/World/Robot/*", "/World/Terrain"]
+        """
         self.stop()
         self.stage = stage
+
+        if isinstance(path_filter, str):
+            self._path_filter = [path_filter]
+        else:
+            self._path_filter = path_filter
 
         # Add random postfix to logger ID to avoid conflicts
         self._logger_id = f"{logger_id}_{np.random.randint(10000)}"
@@ -46,6 +71,7 @@ class UsdRerunLogger:
             rr.disconnect()
             self._logger_id = None
             self.stage = None
+            self._path_filter = None
             self._logged_meshes.clear()
             self._last_transforms.clear()
 
@@ -109,6 +135,11 @@ class UsdRerunLogger:
                 continue
 
             entity_path = str(prim.GetPath())
+
+            if self._path_filter:
+                if not any(fnmatch.fnmatch(entity_path, p) for p in self._path_filter):
+                    continue
+
             current_paths.add(entity_path)
 
             # Log transforms for all Xformable prims
