@@ -1,7 +1,16 @@
+from __future__ import annotations
+
 import fnmatch
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from isaaclab.assets import RigidObjectData, RigidObject
+    from isaaclab.scene import InteractiveScene
+
 
 import numpy as np
 import rerun as rr
@@ -22,7 +31,7 @@ class UsdRerunLogger:
             Read the transform of prims with RigidBodyAPI from PhysX. This is useful when
             the USD stage is not updated during simulation (e.g., during training with Isaac Lab)
         """
-        self.stage = None
+        self._stage = None
         self._logger_id = None
         self._path_filter = None
         self._logged_meshes = set()  # Track which meshes we've already logged
@@ -33,6 +42,8 @@ class UsdRerunLogger:
         self._last_physx_transforms: dict[
             str, tuple[carb.Float3, carb.Float4]
         ] = {}  # Track last logged PhysX transforms for change detection
+        self._isaac_lab_scene: "InteractiveScene" | None = None
+        self._last_isaac_lab_transforms: dict[str, np.ndarray] = {}
 
     def initialize(
         self,
@@ -41,6 +52,7 @@ class UsdRerunLogger:
         spawn=True,
         save_path: Path | None = None,
         path_filter: str | list[str] | None = None,
+        isaac_lab_scene: "InteractiveScene" | None = None,
     ):
         """
         Initialize the Rerun logger with a USD stage.
@@ -61,7 +73,8 @@ class UsdRerunLogger:
             Example: "/World/Robot/*" or ["/World/Robot/*", "/World/Terrain"]
         """
         self.stop()
-        self.stage = stage
+        self._stage = stage
+        self._isaac_lab_scene = isaac_lab_scene
 
         if isinstance(path_filter, str):
             self._path_filter = [path_filter]
@@ -81,11 +94,12 @@ class UsdRerunLogger:
         if self._logger_id is not None:
             rr.disconnect()
             self._logger_id = None
-            self.stage = None
+            self._stage = None
             self._path_filter = None
             self._logged_meshes.clear()
             self._last_usd_transforms.clear()
             self._last_physx_transforms.clear()
+            self._last_isaac_lab_transforms.clear()
 
     def set_time(
         self,
@@ -128,12 +142,13 @@ class UsdRerunLogger:
             duration=duration,
             timestamp=timestamp,
         )
+    
 
     def log_stage(self):
         """
         Log the entire USD stage to Rerun.
         """
-        if self.stage is None:
+        if self._stage is None:
             print("Warning: USD stage is not initialized.")
             return
 
@@ -141,7 +156,10 @@ class UsdRerunLogger:
         current_paths = set()
         # Using Usd.TraverseInstanceProxies to traverse into instanceable prims (references)
         predicate = Usd.TraverseInstanceProxies(Usd.PrimDefaultPredicate)
-        for prim in self.stage.Traverse(predicate):
+
+        self._log_isaac_lab_asset_poses()
+
+        for prim in self._stage.Traverse(predicate):
             # Skip guides
             if prim.GetAttribute("purpose").Get() == UsdGeom.Tokens.guide:
                 continue
@@ -155,7 +173,8 @@ class UsdRerunLogger:
             current_paths.add(entity_path)
 
             # Log transforms for all Xformable prims
-            self._log_transform(prim, entity_path)
+            if entity_path not in self._last_isaac_lab_transforms:
+                self._log_transform(prim, entity_path)
 
             # Log mesh geometry (only once per unique mesh)
             if prim.IsA(UsdGeom.Mesh):
@@ -174,13 +193,42 @@ class UsdRerunLogger:
                 rr.log(path, rr.Clear.flat())
                 del self._last_usd_transforms[path]
 
+
     def _log_transform(self, prim: Usd.Prim, entity_path: str):
         """Log transform using USD or PhysX API."""
         # Rigid Body transforms are read from PhysX if enabled
         if self.use_physx_transforms and prim.HasAPI(UsdPhysics.RigidBodyAPI):
-            self._log_physx_transform(prim, entity_path)
+            self._log_physx_pose(prim, entity_path)
         else:
             self._log_usd_transform(prim, entity_path)
+
+    def _log_isaac_lab_asset_poses(self):
+        """
+        Log all asset poses from the Isaac Lab scene to Rerun.
+        """
+        if self._isaac_lab_scene is None:
+            return
+
+        for name, obj in self._isaac_lab_scene.articulations.items():
+            poses = obj.data.body_pose_w.cpu().numpy()  # shape: (num_bodies, 3)
+            for env_id in range(self._isaac_lab_scene.num_envs):
+                root_path = obj.cfg.prim_path.replace(".*", str(env_id))
+                for body_index, body_name in enumerate(obj.body_names):
+                    body_path = f"{root_path}/{body_name}"
+                    pose = poses[env_id][body_index]
+
+                    # Skip logging if the transform hasn't changed
+                    if body_path in self._last_isaac_lab_transforms and np.array_equal(
+                        self._last_isaac_lab_transforms[body_path], pose
+                    ):
+                        continue
+
+                    self._last_isaac_lab_transforms[body_path] = pose
+
+                    rr.log(body_path, rr.Transform3D(
+                        translation=pose[:3],
+                        quaternion=(pose[4], pose[5], pose[6], pose[3])
+                    ))
 
     def _log_usd_transform(self, prim: Usd.Prim, entity_path: str):
         """Log the transform of an Xformable prim."""
@@ -213,7 +261,7 @@ class UsdRerunLogger:
             ),
         )
 
-    def _log_physx_transform(self, prim: Usd.Prim, entity_path: str):
+    def _log_physx_pose(self, prim: Usd.Prim, entity_path: str):
         """Log the PhysX transform of a prim."""
         from omni.physx import get_physx_interface
 
@@ -603,7 +651,7 @@ class UsdRerunLogger:
         try:
             # Resolve path relative to stage
             if not os.path.isabs(texture_path):
-                stage_path = self.stage.GetRootLayer().realPath
+                stage_path = self._stage.GetRootLayer().realPath
                 if stage_path:
                     texture_path = os.path.join(
                         os.path.dirname(stage_path), texture_path
