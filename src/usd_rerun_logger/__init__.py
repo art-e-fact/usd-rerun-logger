@@ -1,23 +1,38 @@
-from datetime import datetime, timedelta
 import fnmatch
 import os
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
 import rerun as rr
 from PIL import Image
-from pxr import Gf, Sdf, Usd, UsdGeom, UsdShade
+from pxr import Gf, Sdf, Usd, UsdGeom, UsdPhysics, UsdShade
+import carb
 
 
 class UsdRerunLogger:
     """Visualize USD stages in Rerun."""
 
-    def __init__(self):
+    def __init__(self, use_physx_transforms: bool = False):
+        """
+        Initialize the UsdRerunLogger.
+        Parameters
+        ----------
+        use_physx_transforms: bool
+            Read the transform of prims with RigidBodyAPI from PhysX. This is useful when
+            the USD stage is not updated during simulation (e.g., during training with Isaac Lab)
+        """
         self.stage = None
         self._logger_id = None
         self._path_filter = None
         self._logged_meshes = set()  # Track which meshes we've already logged
-        self._last_transforms = {}  # Track last logged transforms for change detection
+        self._last_usd_transforms: dict[
+            str, Gf.Matrix4d
+        ] = {}  # Track last logged transforms for change detection
+        self.use_physx_transforms = use_physx_transforms
+        self._last_physx_transforms: dict[
+            str, tuple[carb.Float3, carb.Float4]
+        ] = {}  # Track last logged PhysX transforms for change detection
 
     def initialize(
         self,
@@ -60,10 +75,6 @@ class UsdRerunLogger:
             # Ensure directory exists
             save_path.parent.mkdir(parents=True, exist_ok=True)
             rr.save(save_path)
-        self._logged_meshes = set()  # Track which meshes we've already logged
-        self._last_transforms: dict[
-            str, Gf.Matrix4d
-        ] = {}  # Track last logged transforms for change detection
 
     def stop(self):
         """Stop the Rerun logger."""
@@ -73,7 +84,8 @@ class UsdRerunLogger:
             self.stage = None
             self._path_filter = None
             self._logged_meshes.clear()
-            self._last_transforms.clear()
+            self._last_usd_transforms.clear()
+            self._last_physx_transforms.clear()
 
     def set_time(
         self,
@@ -143,29 +155,34 @@ class UsdRerunLogger:
             current_paths.add(entity_path)
 
             # Log transforms for all Xformable prims
-            if prim.IsA(UsdGeom.Xformable):
-                self._log_transform(prim, entity_path)
+            self._log_transform(prim, entity_path)
 
             # Log mesh geometry (only once per unique mesh)
             if prim.IsA(UsdGeom.Mesh):
-                mesh_path = str(prim.GetPath())
-                if mesh_path not in self._logged_meshes:
+                if entity_path not in self._logged_meshes:
                     self._log_mesh(prim, entity_path)
-                    self._logged_meshes.add(mesh_path)
+                    self._logged_meshes.add(entity_path)
 
             if prim.IsA(UsdGeom.Cube):
-                cube_path = str(prim.GetPath())
-                if cube_path not in self._logged_meshes:
+                if entity_path not in self._logged_meshes:
                     self._log_cube(prim, entity_path)
-                    self._logged_meshes.add(cube_path)
+                    self._logged_meshes.add(entity_path)
 
         # Clear the logged paths that are no longer present in the stage
-        for path in list(self._last_transforms.keys()):
+        for path in list(self._last_usd_transforms.keys()):
             if path not in current_paths:
                 rr.log(path, rr.Clear.flat())
-                del self._last_transforms[path]
+                del self._last_usd_transforms[path]
 
     def _log_transform(self, prim: Usd.Prim, entity_path: str):
+        """Log transform using USD or PhysX API."""
+        # Rigid Body transforms are read from PhysX if enabled
+        if self.use_physx_transforms and prim.HasAPI(UsdPhysics.RigidBodyAPI):
+            self._log_physx_transform(prim, entity_path)
+        else:
+            self._log_usd_transform(prim, entity_path)
+
+    def _log_usd_transform(self, prim: Usd.Prim, entity_path: str):
         """Log the transform of an Xformable prim."""
         if not prim.IsA(UsdGeom.Xformable):
             return
@@ -175,12 +192,12 @@ class UsdRerunLogger:
         transform_matrix: Gf.Matrix4d = xformable.GetLocalTransformation()
 
         if (
-            entity_path in self._last_transforms
-            and self._last_transforms[entity_path] == transform_matrix
+            entity_path in self._last_usd_transforms
+            and self._last_usd_transforms[entity_path] == transform_matrix
         ):
             return
 
-        self._last_transforms[entity_path] = transform_matrix
+        self._last_usd_transforms[entity_path] = transform_matrix
 
         transform = Gf.Transform(transform_matrix)
 
@@ -195,6 +212,31 @@ class UsdRerunLogger:
                 scale=transform.GetScale(),
             ),
         )
+
+    def _log_physx_transform(self, prim: Usd.Prim, entity_path: str):
+        """Log the PhysX transform of a prim."""
+        from omni.physx import get_physx_interface
+
+        if not prim.HasAPI(UsdPhysics.RigidBodyAPI):
+            return
+
+        # Get the global transformation from PhysX
+        transform = get_physx_interface().get_rigidbody_transformation(entity_path)
+        if not transform["ret_val"]:
+            return
+
+        pos: carb.Float3 = transform["position"]
+        rot: carb.Float4 = transform["rotation"]
+
+        # Skip logging if the transform hasn't changed
+        if entity_path in self._last_physx_transforms and self._last_physx_transforms[
+            entity_path
+        ] == (pos, rot):
+            return
+        self._last_physx_transforms[entity_path] = (pos, rot)
+
+        # TODO: PhysX returns global transforms, and we currently don't handle if parent transforms exist.
+        rr.log(entity_path, rr.Transform3D(translation=pos, quaternion=rot))
 
     def _log_mesh(self, prim: Usd.Prim, entity_path: str):
         """Log mesh geometry to Rerun."""
