@@ -48,6 +48,9 @@ class IsaacLabRerunLogger:
                     # Traverse the child prims to find mesh prims
                     prim = self._scene.stage.GetPrimAtPath(root_path)
                     for prim in Usd.PrimRange(prim, Usd.TraverseInstanceProxies()):
+                        # Skip guides
+                        if prim.GetAttribute("purpose").Get() == UsdGeom.Tokens.guide:
+                            continue
                         # We're assuming that transforms below the rigid-body level are static
                         log_usd_transform(prim)
                         log_visuals(prim)
