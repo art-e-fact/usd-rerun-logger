@@ -44,8 +44,9 @@ def _get_image_texture_path(prim: Usd.Prim):
         return None
 
     shader: UsdShade.Shader = material.ComputeSurfaceSource()[0]
+
+    # If no shader found, try to find connected shader from the material's mdl:surface output
     if not shader:
-        print("No surface shader found.")
         mdl_surface = material.GetOutput("mdl:surface")
         if mdl_surface and mdl_surface.HasConnectedSource():
             source, sourceName, sourceType = mdl_surface.GetConnectedSource()
@@ -86,19 +87,23 @@ def _get_image_texture_path(prim: Usd.Prim):
             print("No diffuse_texture input found in OmniPBR shader.")
             print("Shader inputs:", [inp.GetBaseName() for inp in shader.GetInputs()])
             return None
-        print(diffuse_texture.GetConnectedSource())
+        
+        # Check for connected source
         diffuse_texture_source = diffuse_texture.GetConnectedSource()
-        if not diffuse_texture_source:
-            print("No connected source for diffuse_texture.")
-            return None
-        diffuse_texture_source, input_name, _ = diffuse_texture_source
-        diffuse_texture_source_file = diffuse_texture_source.GetInput(input_name).Get()
-        if not diffuse_texture_source_file or not isinstance(
-            diffuse_texture_source_file, Sdf.AssetPath
-        ):
-            print("Diffuse texture source is not a valid texture file path.")
-            return None
-        return diffuse_texture_source_file.resolvedPath
+        if diffuse_texture_source:
+            source, input_name, _ = diffuse_texture_source
+            diffuse_texture_source_file = source.GetInput(input_name).Get()
+            if not diffuse_texture_source_file or not isinstance(
+                diffuse_texture_source_file, Sdf.AssetPath
+            ):
+                print("Diffuse texture source is not a valid texture file path.")
+                return None
+            return diffuse_texture_source_file.resolvedPath
+
+        # Check for direct value
+        val = diffuse_texture.Get()
+        if val and isinstance(val, Sdf.AssetPath):
+            return val.resolvedPath
 
     elif (
         implementation_source == UsdShade.Tokens.sourceAsset
