@@ -208,7 +208,7 @@ def log_mesh(prim: Usd.Prim):
 
             # TODO: Remove unused vertices
 
-            texture_buffer = extract_color_map(subset.GetPrim())
+            texture_buffer, color = extract_color_map(subset.GetPrim())
 
             rr.log(
                 str(subset.GetPath()),
@@ -218,12 +218,13 @@ def log_mesh(prim: Usd.Prim):
                     vertex_normals=normals,
                     vertex_texcoords=texcoords,
                     albedo_texture=texture_buffer,
+                    albedo_factor=color,
                 ),
                 static=True,
             )
 
     else:
-        texture_buffer = extract_color_map(prim)
+        texture_buffer, color = extract_color_map(prim)
 
         rr.log(
             entity_path,
@@ -233,6 +234,7 @@ def log_mesh(prim: Usd.Prim):
                 vertex_normals=normals,
                 vertex_texcoords=texcoords,
                 albedo_texture=texture_buffer,
+                albedo_factor=color,
             ),
             static=True,
         )

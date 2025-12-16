@@ -1,7 +1,8 @@
-from pxr import Usd, UsdShade, Sdf
-from PIL import Image
 import os
+
 import numpy as np
+from PIL import Image
+from pxr import Gf, Sdf, Usd, UsdShade
 
 
 def _load_texture(stage, texture_path):
@@ -32,7 +33,7 @@ def _load_texture(stage, texture_path):
         return None
 
 
-def _get_image_texture_path(prim: Usd.Prim):
+def _get_image_texture_path(prim: Usd.Prim) -> str | Gf.Vec3f | None:
     """
     Get material color or texture path.
     Returns: texture_path or None
@@ -62,20 +63,29 @@ def _get_image_texture_path(prim: Usd.Prim):
     ):
         diffuse_color = shader.GetInput("diffuseColor")
 
-        diffuse_color_source: UsdShade.ConnectableAPI = (
-            diffuse_color.GetConnectedSource()[0]
-        )
+        diffuse_color_source = diffuse_color.GetConnectedSource()
 
-        diffuse_color_source_file = diffuse_color_source.GetInput("file")
-        diffuse_color_source_file_path = diffuse_color_source_file.Get()
+        if diffuse_color_source:
+            diffuse_color_source: UsdShade.ConnectableAPI = diffuse_color_source[0]
 
-        if not diffuse_color_source_file_path or not isinstance(
-            diffuse_color_source_file_path, Sdf.AssetPath
-        ):
-            print("Diffuse color source is not a valid texture file path.")
-            return None
+            diffuse_color_source_file = diffuse_color_source.GetInput("file")
+            diffuse_color_source_file_path = diffuse_color_source_file.Get()
 
-        return None, diffuse_color_source_file_path.resolvedPath
+            if not diffuse_color_source_file_path or not isinstance(
+                diffuse_color_source_file_path, Sdf.AssetPath
+            ):
+                print("Diffuse color source is not a valid texture file path.")
+                return None
+
+            return None, diffuse_color_source_file_path.resolvedPath
+        else:
+            val = diffuse_color.Get()
+            if val:
+                if isinstance(val, Sdf.AssetPath):
+                    return val.resolvedPath
+                elif isinstance(val, Gf.Vec3f):
+                    return val
+        
 
     elif (
         implementation_source == UsdShade.Tokens.sourceAsset
@@ -83,27 +93,30 @@ def _get_image_texture_path(prim: Usd.Prim):
         == "OmniPBR"
     ):
         diffuse_texture = shader.GetInput("diffuse_texture")
-        if not diffuse_texture:
-            print("No diffuse_texture input found in OmniPBR shader.")
-            print("Shader inputs:", [inp.GetBaseName() for inp in shader.GetInputs()])
-            return None
-        
-        # Check for connected source
-        diffuse_texture_source = diffuse_texture.GetConnectedSource()
-        if diffuse_texture_source:
-            source, input_name, _ = diffuse_texture_source
-            diffuse_texture_source_file = source.GetInput(input_name).Get()
-            if not diffuse_texture_source_file or not isinstance(
-                diffuse_texture_source_file, Sdf.AssetPath
-            ):
-                print("Diffuse texture source is not a valid texture file path.")
-                return None
-            return diffuse_texture_source_file.resolvedPath
+        if diffuse_texture:
+            # Check for connected source
+            diffuse_texture_source = diffuse_texture.GetConnectedSource()
+            if diffuse_texture_source:
+                source, input_name, _ = diffuse_texture_source
+                diffuse_texture_source_file = source.GetInput(input_name).Get()
+                if diffuse_texture_source_file and isinstance(
+                    diffuse_texture_source_file, Sdf.AssetPath
+                ):
+                    return diffuse_texture_source_file.resolvedPath
 
-        # Check for direct value
-        val = diffuse_texture.Get()
-        if val and isinstance(val, Sdf.AssetPath):
-            return val.resolvedPath
+            # Check for direct value
+            val = diffuse_texture.Get()
+            if val and isinstance(val, Sdf.AssetPath):
+                return val.resolvedPath
+
+        # Fallback to diffuse_color_constant if texture is missing or invalid
+        diffuse_color_constant = shader.GetInput("diffuse_color_constant")
+        if diffuse_color_constant:
+            val = diffuse_color_constant.Get()
+            if val and isinstance(val, Gf.Vec3f):
+                return val
+
+        return None
 
     elif (
         implementation_source == UsdShade.Tokens.sourceAsset
@@ -111,7 +124,6 @@ def _get_image_texture_path(prim: Usd.Prim):
         == "gltf_material"
     ):
         diffuse_texture = shader.GetInput("base_color_texture")
-        print(diffuse_texture.GetConnectedSource())
         diffuse_texture_source = diffuse_texture.GetConnectedSource()[0]
         diffuse_texture_source_file: Sdf.AssetPath = diffuse_texture_source.GetInput(
             "texture"
@@ -128,10 +140,13 @@ def _get_image_texture_path(prim: Usd.Prim):
         return None
 
 
-def extract_color_map(prim: Usd.Prim) -> np.ndarray | None:
+def extract_color_map(prim: Usd.Prim) -> tuple[np.ndarray | None, Gf.Vec3f | None]:
     """Extract color map from the material bound to the given prim."""
     texture_path = _get_image_texture_path(prim)
-    if texture_path:
+    if isinstance(texture_path, str):
         texture_buffer = _load_texture(prim.GetStage(), texture_path)
-        return texture_buffer
-    return None
+        return texture_buffer, None
+    elif isinstance(texture_path, Gf.Vec3f):
+        return None, texture_path
+    else:
+        return None, None

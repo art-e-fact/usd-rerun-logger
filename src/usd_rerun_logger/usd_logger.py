@@ -52,10 +52,11 @@ class UsdRerunLogger:
         # Using Usd.TraverseInstanceProxies to traverse into instanceable prims (references)
         predicate = Usd.TraverseInstanceProxies(Usd.PrimDefaultPredicate)
 
-        for prim in self._stage.Traverse(predicate):
-            print(prim.GetPath())
+        iterator = iter(self._stage.Traverse(predicate))
+        for prim in iterator:
             # Skip guides
             if prim.GetAttribute("purpose").Get() == UsdGeom.Tokens.guide:
+                iterator.PruneChildren()
                 continue
 
             entity_path = str(prim.GetPath())
