@@ -9,7 +9,6 @@ assert_usd_core_dependency()
 assert_isaac_lab_dependency()
 
 
-from isaaclab.assets.rigid_object import RigidObject
 from isaaclab.scene import InteractiveScene
 from pxr import Gf, Usd, UsdGeom
 

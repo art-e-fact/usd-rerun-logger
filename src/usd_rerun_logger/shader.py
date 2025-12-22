@@ -85,7 +85,6 @@ def _get_image_texture_path(prim: Usd.Prim) -> str | Gf.Vec3f | None:
                     return val.resolvedPath
                 elif isinstance(val, Gf.Vec3f):
                     return val
-        
 
     elif (
         implementation_source == UsdShade.Tokens.sourceAsset
