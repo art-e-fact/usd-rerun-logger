@@ -4,11 +4,11 @@ from .util import assert_usd_core_dependency
 
 assert_usd_core_dependency()
 
-import rerun as rr # noqa: E402
-from pxr import Gf, Usd, UsdGeom # noqa: E402
+import rerun as rr  # noqa: E402
+from pxr import Gf, Usd, UsdGeom  # noqa: E402
 
-from .transfom import log_usd_transform # noqa: E402
-from .visual import log_visuals # noqa: E402
+from .transfom import log_usd_transform  # noqa: E402
+from .visual import log_visuals  # noqa: E402
 
 
 class UsdRerunLogger:
