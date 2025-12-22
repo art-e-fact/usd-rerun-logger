@@ -35,10 +35,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "pytest>=9.0.2",
     "types-usd>=24.5.2",
-]
-
-[project.optional-dependencies]
-dev = [
-    "types-usd>=24.5.2",
+    "usd-core>=25.11",
 ]
