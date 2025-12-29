@@ -1,7 +1,7 @@
 [project]
 name = "usd-rerun-logger"
 version = "0.1.0"
-description = ""
+description = "Python package for visualizing OpenUSD based simulations (like NVIDIA Isaac Sim) with Rerun.io"
 readme = "README.md"
 authors = [
     { name = "AGC", email = "andras@artefacts.com" },
