@@ -1,14 +1,12 @@
 [project]
 name = "usd-rerun-logger"
 version = "0.1.0"
-description = "Add your description here"
+description = ""
 readme = "README.md"
 authors = [
     { name = "AGC", email = "andras@artefacts.com" },
-    { name = "TN, email = "tomo@artefacts.com }
+    { name = "TN", email = "tomo@artefacts.com" },
 ]
-description = ""
-readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "pillow>=11.2.1",
