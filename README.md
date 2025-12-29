@@ -28,3 +28,15 @@ while looping:
         duration=env.common_step_counter * env.step_dt,
     )
     logger.log_scene()
+```
+
+## Publishing to Pypi
+
+```
+# Update version
+uv version x.x.x
+# Build
+uv build
+# Publish
+uv publish --token <pypi token>
+```
