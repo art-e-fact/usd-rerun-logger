@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
-    { name = "AGC", email = "andras@artefacts.com" }
+    { name = "AGC", email = "andras@artefacts.com" },
     { name = "TN, email = "tomo@artefacts.com }
 ]
 description = ""
