@@ -18,6 +18,7 @@ def assert_usd_core_dependency() -> None:
         )
         raise ImportError(message) from exc
 
+
 def assert_isaac_lab_dependency() -> None:
     """Ensure that the isaaclab package is importable."""
 

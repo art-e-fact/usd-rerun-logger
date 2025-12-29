@@ -1,5 +1,5 @@
 import numpy as np
-from pxr import Usd, UsdGeom, Sdf, Tf
+from pxr import Usd, UsdGeom
 import rerun as rr
 
 from .shader import extract_color_map
