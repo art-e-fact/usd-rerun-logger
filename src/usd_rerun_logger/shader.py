@@ -77,7 +77,7 @@ def _get_image_texture_path(prim: Usd.Prim) -> str | Gf.Vec3f | None:
                 print("Diffuse color source is not a valid texture file path.")
                 return None
 
-            return None, diffuse_color_source_file_path.resolvedPath
+            return diffuse_color_source_file_path.resolvedPath
         else:
             val = diffuse_color.Get()
             if val:
@@ -85,7 +85,6 @@ def _get_image_texture_path(prim: Usd.Prim) -> str | Gf.Vec3f | None:
                     return val.resolvedPath
                 elif isinstance(val, Gf.Vec3f):
                     return val
-        
 
     elif (
         implementation_source == UsdShade.Tokens.sourceAsset

@@ -3,7 +3,7 @@ import rerun as rr
 from pathlib import Path
 from pxr import Usd
 
-rr.init("so101_example", spawn=True)
-stage = Usd.Stage.Open(str(Path(__file__).parent / "assets/so101_follower.usda"))
+rr.init("orange_example", spawn=True)
+stage = Usd.Stage.Open(str(Path(__file__).parent / "assets" / "billboard.usda"))
 logger = UsdRerunLogger(stage)
 logger.log_stage()

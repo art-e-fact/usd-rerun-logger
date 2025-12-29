@@ -9,12 +9,11 @@ assert_usd_core_dependency()
 assert_isaac_lab_dependency()
 
 
-from isaaclab.assets.rigid_object import RigidObject
-from isaaclab.scene import InteractiveScene
-from pxr import Gf, Usd, UsdGeom
+from isaaclab.scene import InteractiveScene  # noqa: E402
+from pxr import Gf, Usd, UsdGeom  # noqa: E402
 
-from .transfom import log_usd_transform
-from .visual import log_visuals
+from .transfom import log_usd_transform  # noqa: E402
+from .visual import log_visuals  # noqa: E402
 
 # Note: In Isaac Lab, we can't read poses directly from the USD: https://github.com/isaac-sim/IsaacLab/issues/3472#issuecomment-3299713710
 

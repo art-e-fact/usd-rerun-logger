@@ -1,16 +1,33 @@
 [project]
 name = "usd-rerun-logger"
 version = "0.1.0"
-description = "Add your description here"
+description = "Python package for visualizing OpenUSD based simulations (like NVIDIA Isaac Sim) with Rerun.io "
 readme = "README.md"
 authors = [
     { name = "Andras Polgar", email = "andras@artefacts.com" }
 ]
+license = { text = "MIT" }                           # choose your license
 requires-python = ">=3.11"
 dependencies = [
     "pillow>=11.2.1",
     "rerun-sdk>=0.23.1",
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+keywords = ["USD", "OpenUSD", "Rerun", "visualization", "Isaac Sim", "Isaac Lab", "Omniverse"]
+
+[project.urls]
+Homepage = "https://github.com/art-e-fact/usd-rerun-logger"
+Source = "https://github.com/art-e-fact/usd-rerun-logger"
+Issues = "https://github.com/art-e-fact/usd-rerun-logger/issues"
 
 [build-system]
 requires = ["uv_build>=0.9.7,<0.10.0"]
@@ -18,5 +35,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "pytest>=9.0.2",
     "types-usd>=24.5.2",
+    "usd-core>=25.11",
 ]
