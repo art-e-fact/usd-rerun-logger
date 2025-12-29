@@ -2,7 +2,7 @@ from pxr import Usd, UsdGeom
 import rerun as rr
 
 
-def log_cube(prim: Usd.Prim):
+def log_cube(recording_stream: rr.RecordingStream, prim: Usd.Prim):
     """Log a cube prim as a Rerun box."""
     cube = UsdGeom.Cube(prim)
     entity_path = str(prim.GetPath())
@@ -18,7 +18,7 @@ def log_cube(prim: Usd.Prim):
             c = colors[0]
             color = (int(c[0] * 255), int(c[1] * 255), int(c[2] * 255))
 
-    rr.log(
+    recording_stream.log(
         entity_path,
         rr.Boxes3D(
             half_sizes=[half_size, half_size, half_size],

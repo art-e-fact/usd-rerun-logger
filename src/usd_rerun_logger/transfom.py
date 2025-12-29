@@ -7,7 +7,8 @@ if TYPE_CHECKING:
 
 
 def log_usd_transform(
-    prim: Usd.Prim, prev_transforms: dict[str, Gf.Matrix4d] | None = None
+    recording_stream: rr.RecordingStream,
+    prim: Usd.Prim, prev_transforms: dict[str, Gf.Matrix4d] | None = None,
 ) -> None:
     """Log the transform of an Xformable prim."""
     if not prim.IsA(UsdGeom.Xformable):
@@ -35,7 +36,7 @@ def log_usd_transform(
     quaternion = transform.GetRotation().GetQuat()
 
     # Log the transform to Rerun
-    rr.log(
+    recording_stream.log(
         entity_path,
         rr.Transform3D(
             translation=transform.GetTranslation(),
@@ -46,6 +47,7 @@ def log_usd_transform(
 
 
 def log_physx_pose(
+    recording_stream: rr.RecordingStream,
     prim: Usd.Prim,
     entity_path: str,
     prev_transforms: dict[str, tuple["carb.Float3", "carb.Float4"]] | None = None,
@@ -71,4 +73,4 @@ def log_physx_pose(
     prev_transforms[entity_path] = (pos, rot)
 
     # TODO: PhysX returns global transforms, and we currently don't handle if parent transforms exist.
-    rr.log(entity_path, rr.Transform3D(translation=pos, quaternion=rot))
+    recording_stream.log(entity_path, rr.Transform3D(translation=pos, quaternion=rot))

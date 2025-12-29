@@ -9,13 +9,21 @@ from pxr import Gf, Usd, UsdGeom  # noqa: E402
 
 from .transfom import log_usd_transform  # noqa: E402
 from .visual import log_visuals  # noqa: E402
+from .utils import get_recording_stream  # noqa: E402
 
+
+__all__ = [
+    "UsdRerunLogger",
+]
 
 class UsdRerunLogger:
     def __init__(
         self,
         stage: Usd.Stage,
         path_filter: str | list[str] | None = None,
+        recording_stream: rr.RecordingStream | None = None,
+        save_path: str | None = None,
+        application_id: str | None = None,
     ):
         """
         Docstring for __init__
@@ -27,6 +35,11 @@ class UsdRerunLogger:
         :type path_filter: str | list[str] | None
         """
         self._stage = stage
+        self._recording_stream = get_recording_stream(
+            recording_stream=recording_stream,
+            save_path=save_path,
+            application_id=application_id,
+        )
         self._logged_meshes = set()  # Track which meshes we've already logged
         self._last_usd_transforms: dict[
             str, Gf.Matrix4d
@@ -76,15 +89,15 @@ class UsdRerunLogger:
             current_paths.add(entity_path)
 
             # Log transforms for all Xformable prims
-            log_usd_transform(prim, self._last_usd_transforms)
+            log_usd_transform(self._recording_stream, prim, self._last_usd_transforms)
 
             if entity_path not in self._logged_meshes:
                 # Log visuals for Mesh prims
-                log_visuals(prim)
+                log_visuals(self._recording_stream, prim)
                 self._logged_meshes.add(entity_path)
 
         # Clear the logged paths that are no longer present in the stage
         for path in list(self._last_usd_transforms.keys()):
             if path not in current_paths:
-                rr.log(path, rr.Clear.flat())
+                self._recording_stream.log(path, rr.Clear.flat())
                 del self._last_usd_transforms[path]
