@@ -151,20 +151,20 @@ class LogRerun(
 
         self.step_id = -1
         self.episode_id = -1
-        self.timeline_name: str | None = None
-        self.recorded_frames = 0
+        self._timeline_name: str | None = None
+        self._recorded_frames = 0
 
     def _capture_frame(self):
         """Capture a frame from the environment."""
-        if self.timeline_name is None:
+        if self._timeline_name is None:
             return
-        timestamp = self.recorded_frames * self.logger.scene.physics_dt
-        print(f"Logging frame at time: {timestamp:.3f}s timeline: {self.timeline_name}")
+        timestamp = self._recorded_frames * self.logger.scene.physics_dt
+        print(f"Logging frame at time: {timestamp:.3f}s timeline: {self._timeline_name}")
         self.logger.recording_stream.set_time(
-            timeline=self.timeline_name, duration=timestamp
+            timeline=self._timeline_name, duration=timestamp
         )
         self.logger.log_scene()
-        self.recorded_frames += 1
+        self._recorded_frames += 1
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
@@ -195,7 +195,7 @@ class LogRerun(
 
         self._capture_frame()
 
-        if self.recorded_frames > self.recording_length:
+        if self._recorded_frames > self.recording_length:
             self.stop_recording()
 
         return obs, rew, terminated, truncated, info
@@ -208,13 +208,13 @@ class LogRerun(
 
     def start_recording(self, timeline_name: str):
         """Start a new recording. If it is already recording, stops the current recording before starting the new one."""
-        self.timeline_name = timeline_name
+        self._timeline_name = timeline_name
         self.logger.recording_stream.reset_time()
         print(f"Starting Rerun recording: {timeline_name}")
         self.logger.recording_stream.set_time(timeline_name, timestamp=0.0)
 
     def stop_recording(self):
         """Stop current recording and saves the video."""
-        self.timeline_name = None
-        self.recorded_frames = 0
+        self._timeline_name = None
+        self._recorded_frames = 0
         self.logger.recording_stream.flush()
