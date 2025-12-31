@@ -31,8 +31,8 @@ class IsaacLabRerunLogger:
         save_path: str | None = None,
         application_id: str | None = None,
     ):
-        self.scene = scene
-        self.recording_stream = get_recording_stream(
+        self._scene = scene
+        self._recording_stream = get_recording_stream(
             recording_stream=recording_stream,
             save_path=save_path,
             application_id=application_id,
@@ -47,6 +47,14 @@ class IsaacLabRerunLogger:
         self._logged_envs = (
             [logged_envs] if isinstance(logged_envs, int) else logged_envs
         )
+
+    @property
+    def scene(self) -> "InteractiveScene":
+        return self._scene
+    
+    @property
+    def recording_stream(self) -> rr.RecordingStream:
+        return self._recording_stream
 
     def log_scene(self):
         if self.scene is None or self.scene.stage is None:

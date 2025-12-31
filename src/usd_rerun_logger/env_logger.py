@@ -159,7 +159,6 @@ class LogRerun(
         if self._timeline_name is None:
             return
         timestamp = self._recorded_frames * self.logger.scene.physics_dt
-        print(f"Logging frame at time: {timestamp:.3f}s timeline: {self._timeline_name}")
         self.logger.recording_stream.set_time(
             timeline=self._timeline_name, duration=timestamp
         )
@@ -186,7 +185,7 @@ class LogRerun(
     def step(
         self, action: ActType
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        """Steps through the environment using action, recording observations if :attr:`self.recording`."""
+        """Steps through the environment using action and logs the environment if recording is active."""
         obs, rew, terminated, truncated, info = self.env.step(action)
         self.step_id += 1
 
@@ -201,10 +200,9 @@ class LogRerun(
         return obs, rew, terminated, truncated, info
 
     def close(self):
-        """Closes the wrapper then the video recorder."""
+        """Closes the wrapper and flushes the recording stream."""
         super().close()
-        if self.recording:
-            self.stop_recording()
+        self.stop_recording()
 
     def start_recording(self, timeline_name: str):
         """Start a new recording. If it is already recording, stops the current recording before starting the new one."""
@@ -214,7 +212,7 @@ class LogRerun(
         self.logger.recording_stream.set_time(timeline_name, timestamp=0.0)
 
     def stop_recording(self):
-        """Stop current recording and saves the video."""
+        """Stop current recording and flush the recording stream."""
         self._timeline_name = None
         self._recorded_frames = 0
         self.logger.recording_stream.flush()
