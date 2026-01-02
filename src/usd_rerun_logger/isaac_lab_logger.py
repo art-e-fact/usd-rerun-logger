@@ -1,5 +1,5 @@
 import itertools
-
+from typing import TYPE_CHECKING
 import numpy as np
 import rerun as rr
 
@@ -9,7 +9,8 @@ assert_usd_core_dependency()
 assert_isaac_lab_dependency()
 
 
-from isaaclab.scene import InteractiveScene  # noqa: E402
+if TYPE_CHECKING:
+    from isaaclab.scene import InteractiveScene  # noqa: E402
 from pxr import Gf, Usd, UsdGeom  # noqa: E402
 
 from .transfom import log_usd_transform  # noqa: E402

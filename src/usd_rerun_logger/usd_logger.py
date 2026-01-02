@@ -9,7 +9,7 @@ from pxr import Gf, Usd, UsdGeom  # noqa: E402
 
 from .transfom import log_usd_transform  # noqa: E402
 from .visual import log_visuals  # noqa: E402
-from .utils import get_recording_stream  # noqa: E402
+from .util import get_recording_stream  # noqa: E402
 
 
 __all__ = [

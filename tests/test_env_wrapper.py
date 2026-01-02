@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import sys
 import types
-from collections import defaultdict
 from unittest import mock
 
 import gymnasium as gym
-from gymnasium import spaces
 import numpy as np
 import pytest
+import rerun as rr
+from gymnasium import spaces
 
 # --- Lightweight Isaac Lab & logger stubs -------------------------------------------------
 
@@ -21,6 +21,7 @@ class TinyInteractiveScene:
     def __init__(self, physics_dt: float = 1 / 60.0):
         self.physics_dt = physics_dt
         self.num_envs = 1
+        self.stage = None
 
 
 def _install_isaaclab_stub() -> None:
@@ -37,7 +38,7 @@ def _install_isaaclab_stub() -> None:
 
 
 _install_isaaclab_stub()
-from  usd_rerun_logger.env_logger import LogRerun  # noqa: E402
+from usd_rerun_logger.env_wrapper import LogRerun  # noqa: E402
 
 # --- Minimal Isaac-like environment -------------------------------------------------------
 
@@ -80,18 +81,25 @@ class DummyIsaacEnv(gym.Env):
 # --- Tests -------------------------------------------------------------------------------
 
 
-@mock.patch("usd_rerun_logger.env_logger.IsaacLabRerunLogger", autospec=True)
-@mock.patch("rerun.RecordingStream", autospec=True)
-def test_episode_trigger_logs_only_selected_episodes(_, mock_recording_stream):
+@pytest.fixture()
+def recording() -> rr.RecordingStream:  # pyright: ignore[reportInvalidTypeForm]
+    with mock.patch(
+        "usd_rerun_logger.util.rr.get_data_recording"
+    ) as get_data_recording:
+        recording = mock.Mock(spec=rr.RecordingStream)
+        get_data_recording.return_value = recording
+        yield recording
+
+
+def test_episode_trigger_logs_only_selected_episodes(recording):
+    """LogRerun should only log episodes selected by the episode trigger."""
     log_episodes = {0, 2}
+
     wrapper = LogRerun(
         DummyIsaacEnv(max_steps=3),
         episode_trigger=lambda episode: episode in log_episodes,
         step_trigger=lambda _: False,
-        recording_stream=mock_recording_stream,
     )
-    wrapper.logger.scene = wrapper.scene
-    recording = wrapper.logger.recording_stream
 
     for episode in range(4):
         wrapper.reset()
@@ -117,42 +125,102 @@ def test_episode_trigger_logs_only_selected_episodes(_, mock_recording_stream):
     wrapper.close()
 
 
-# def test_step_trigger_emits_timelines_on_schedule():
-#     wrapper = LogRerun(
-#         DummyIsaacEnv(max_steps=5),
-#         episode_trigger=lambda _: False,
-#         step_trigger=lambda step: step in (0, 3),
-#     )
-
-#     wrapper.reset()
-#     for _ in range(8):
-#         wrapper.step(0)
-
-#     frames = wrapper.logger.frames_by_timeline
-#     assert {"step_0", "step_3"}.issubset(frames)
-#     assert frames["step_0"] > 0
-#     assert frames["step_3"] > 0
-
-#     wrapper.close()
+# --- Migrated tests from Gymnasium ---------------------------------------------------------------
+# These tests are adapted to make sure we're matching the RecordVideo trigger API.
+# See the original tests at https://github.com/Farama-Foundation/Gymnasium/blob/ffb4c9f33144a79398e2c140207c98863b970ee7/tests/wrappers/test_record_video.py
 
 
-# def test_recording_length_stops_after_cap():
-#     recording_length = 1
-#     wrapper = LogRerun(
-#         DummyIsaacEnv(max_steps=5),
-#         episode_trigger=lambda _: False,
-#         step_trigger=lambda step: step == 0,
-#         recording_length=recording_length,
-#     )
+@pytest.mark.parametrize("episodic_trigger", [None, lambda x: x in [0, 3, 5, 10, 12]])
+def test_episodic_trigger(episodic_trigger, recording):
+    """Test LogRerun using the default episode trigger."""
+    env = DummyIsaacEnv(max_steps=30)
+    env = LogRerun(env, episode_trigger=episodic_trigger)
 
-#     wrapper.reset()
-#     for _ in range(4):
-#         wrapper.step(0)
+    env.reset()
+    episode_count = 0
+    for _ in range(199):
+        action = env.action_space.sample()
+        _, _, terminated, truncated, _ = env.step(action)
+        if terminated or truncated:
+            env.reset()
+            episode_count += 1
+    env.close()
 
-#     frames = wrapper.logger.frames_by_timeline
-#     assert frames["step_0"] == recording_length
-#     assert wrapper.logger.recording_stream.flush_calls == 1
-#     assert wrapper.timeline_name is None
-#     assert wrapper.recorded_frames == 0
+    timelines = set(
+        map(lambda call: call.kwargs["timeline"], recording.set_time.call_args_list)
+    )
+    assert env.episode_trigger is not None
+    assert len(timelines) == sum(
+        env.episode_trigger(i) for i in range(episode_count + 1)
+    )
 
-#     wrapper.close()
+
+def test_step_trigger(recording):
+    """Test LogRerun defining step trigger function."""
+    env = DummyIsaacEnv(max_steps=30)
+    env = LogRerun(env, step_trigger=lambda x: x % 100 == 0)
+    env.reset()
+    total_steps = 0
+    for _ in range(199):
+        action = env.action_space.sample()
+        _, _, terminated, truncated, _ = env.step(action)
+        total_steps += 1
+        if terminated or truncated:
+            env.reset()
+    env.close()
+    timelines = set(
+        map(lambda call: call.kwargs["timeline"], recording.set_time.call_args_list)
+    )
+    assert len(timelines) == 2
+
+
+def test_both_episodic_and_step_trigger(recording):
+    """Test LogRerun defining both step and episode trigger functions."""
+    env = DummyIsaacEnv(max_steps=30)
+    env = LogRerun(
+        env,
+        step_trigger=lambda x: x == 100,
+        episode_trigger=lambda x: x == 0 or x == 3,
+    )
+    env.reset(seed=123)
+    env.action_space.seed(123)
+    total_steps = 0
+    for _ in range(199):
+        action = env.action_space.sample()
+        _, _, terminated, truncated, _ = env.step(action)
+        total_steps += 1
+        if terminated or truncated:
+            env.reset()
+    env.close()
+    timelines = set(
+        map(lambda call: call.kwargs["timeline"], recording.set_time.call_args_list)
+    )
+
+    assert len(timelines) == 3
+
+
+def test_video_length(recording, recording_length: int = 10):
+    """Test if argument recording_length of LogRerun works properly."""
+    env = DummyIsaacEnv(max_steps=20)
+    env = LogRerun(
+        env, step_trigger=lambda x: x == 0, recording_length=recording_length
+    )
+
+    env.reset(seed=123)
+    env.action_space.seed(123)
+    for _ in range(recording_length):
+        _, _, term, trunc, _ = env.step(env.action_space.sample())
+        if term or trunc:
+            break
+
+    # check that the environment is still recording then take a step to take the number of steps > recording length
+    assert env._timeline_name is not None
+    env.step(env.action_space.sample())
+    assert env._timeline_name is None
+    env.close()
+
+    # check that only one recording is recorded
+    timelines = set(
+        map(lambda call: call.kwargs["timeline"], recording.set_time.call_args_list)
+    )
+    assert len(timelines) == 1
