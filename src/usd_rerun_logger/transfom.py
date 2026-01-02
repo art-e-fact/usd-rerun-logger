@@ -8,7 +8,8 @@ if TYPE_CHECKING:
 
 def log_usd_transform(
     recording_stream: rr.RecordingStream,
-    prim: Usd.Prim, prev_transforms: dict[str, Gf.Matrix4d] | None = None,
+    prim: Usd.Prim,
+    prev_transforms: dict[str, Gf.Matrix4d] | None = None,
 ) -> None:
     """Log the transform of an Xformable prim."""
     if not prim.IsA(UsdGeom.Xformable):

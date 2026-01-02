@@ -16,6 +16,7 @@ __all__ = [
     "UsdRerunLogger",
 ]
 
+
 class UsdRerunLogger:
     def __init__(
         self,

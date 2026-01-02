@@ -23,6 +23,7 @@ __all__ = [
     "IsaacLabRerunLogger",
 ]
 
+
 class IsaacLabRerunLogger:
     def __init__(
         self,
@@ -52,7 +53,7 @@ class IsaacLabRerunLogger:
     @property
     def scene(self) -> "InteractiveScene":
         return self._scene
-    
+
     @property
     def recording_stream(self) -> rr.RecordingStream:
         return self._recording_stream
