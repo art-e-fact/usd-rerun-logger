@@ -5,7 +5,7 @@ import rerun as rr
 from .shader import extract_color_map
 
 
-def log_mesh(prim: Usd.Prim):
+def log_mesh(recording_stream: rr.RecordingStream, prim: Usd.Prim):
     """Log mesh geometry to Rerun."""
     mesh = UsdGeom.Mesh(prim)
     entity_path = str(prim.GetPath())
@@ -21,14 +21,14 @@ def log_mesh(prim: Usd.Prim):
     face_vertex_counts_attr = mesh.GetFaceVertexCountsAttr()
 
     if not face_vertex_indices_attr or not face_vertex_counts_attr:
-        rr.log(entity_path, rr.Points3D(positions=vertices), static=True)
+        recording_stream.log(entity_path, rr.Points3D(positions=vertices), static=True)
         return
 
     face_vertex_indices = np.array(face_vertex_indices_attr.Get())
     face_vertex_counts = np.array(face_vertex_counts_attr.Get())
 
     if face_vertex_indices is None or face_vertex_counts is None:
-        rr.log(entity_path, rr.Points3D(positions=vertices), static=True)
+        recording_stream.log(entity_path, rr.Points3D(positions=vertices), static=True)
         return
 
     # --- Handle UVs ---
@@ -210,7 +210,7 @@ def log_mesh(prim: Usd.Prim):
 
             texture_buffer, color = extract_color_map(subset.GetPrim())
 
-            rr.log(
+            recording_stream.log(
                 str(subset.GetPath()),
                 rr.Mesh3D(
                     vertex_positions=vertices,
@@ -226,7 +226,7 @@ def log_mesh(prim: Usd.Prim):
     else:
         texture_buffer, color = extract_color_map(prim)
 
-        rr.log(
+        recording_stream.log(
             entity_path,
             rr.Mesh3D(
                 vertex_positions=vertices,

@@ -1,5 +1,5 @@
 import itertools
-
+from typing import TYPE_CHECKING
 import numpy as np
 import rerun as rr
 
@@ -9,13 +9,19 @@ assert_usd_core_dependency()
 assert_isaac_lab_dependency()
 
 
-from isaaclab.scene import InteractiveScene  # noqa: E402
+if TYPE_CHECKING:
+    from isaaclab.scene import InteractiveScene  # noqa: E402
 from pxr import Gf, Usd, UsdGeom  # noqa: E402
 
 from .transfom import log_usd_transform  # noqa: E402
 from .visual import log_visuals  # noqa: E402
+from .util import get_recording_stream  # noqa: E402
 
 # Note: In Isaac Lab, we can't read poses directly from the USD: https://github.com/isaac-sim/IsaacLab/issues/3472#issuecomment-3299713710
+
+__all__ = [
+    "IsaacLabRerunLogger",
+]
 
 
 class IsaacLabRerunLogger:
@@ -23,8 +29,16 @@ class IsaacLabRerunLogger:
         self,
         scene: "InteractiveScene",
         logged_envs: int | list[int] = 0,
+        recording_stream: rr.RecordingStream | None = None,
+        save_path: str | None = None,
+        application_id: str | None = None,
     ):
         self._scene = scene
+        self._recording_stream = get_recording_stream(
+            recording_stream=recording_stream,
+            save_path=save_path,
+            application_id=application_id,
+        )
         self._prev_transforms: dict[
             str, np.ndarray
         ] = {}  # Track the last logged poses (position + orientation)
@@ -36,18 +50,26 @@ class IsaacLabRerunLogger:
             [logged_envs] if isinstance(logged_envs, int) else logged_envs
         )
 
+    @property
+    def scene(self) -> "InteractiveScene":
+        return self._scene
+
+    @property
+    def recording_stream(self) -> rr.RecordingStream:
+        return self._recording_stream
+
     def log_scene(self):
-        if self._scene is None or self._scene.stage is None:
+        if self.scene is None or self.scene.stage is None:
             return
 
         assets = itertools.chain(
-            self._scene.articulations.items(),
-            self._scene.rigid_objects.items(),
+            self.scene.articulations.items(),
+            self.scene.rigid_objects.items(),
         )
         for obj_name, obj in assets:
             poses = obj.data.body_pose_w.cpu().numpy()  # shape: (num_bodies, 3)
 
-            for env_id in range(self._scene.num_envs):
+            for env_id in range(self.scene.num_envs):
                 # Skip logging for unlisted environments
                 if env_id not in self._logged_envs:
                     continue
@@ -81,7 +103,7 @@ class IsaacLabRerunLogger:
                         scale = Gf.Transform(usd_transform).GetScale()
                     else:
                         scale = None
-                    rr.log(
+                    self.recording_stream.log(
                         body_path,
                         rr.Transform3D(
                             translation=pose[:3],
@@ -95,7 +117,7 @@ class IsaacLabRerunLogger:
 
     def _log_usd_subtree(self, prim_path: str) -> None:
         """Recursively log USD subtree starting from the given prim."""
-        prim = self._scene.stage.GetPrimAtPath(prim_path)
+        prim = self.scene.stage.GetPrimAtPath(prim_path)
         iterator = iter(Usd.PrimRange(prim, Usd.TraverseInstanceProxies()))
         for prim in iterator:
             # Skip guides
@@ -104,5 +126,5 @@ class IsaacLabRerunLogger:
                 iterator.PruneChildren()
                 continue
             # We're assuming that transforms below the rigid-body level are static
-            log_usd_transform(prim, self._prev_usd_transforms)
-            log_visuals(prim)
+            log_usd_transform(self.recording_stream, prim, self._prev_usd_transforms)
+            log_visuals(self.recording_stream, prim)

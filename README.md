@@ -2,7 +2,20 @@
 
 # :construction: Development preview. Work in progress.
 
-Usage notes:
+Usage examples:
+
+Isaac Lab environment wrapper:
+[Full source](./examples/isaac_lab_wrapper_franka.py)
+```py
+env = gym.make("Isaac-Reach-Franka-v0", cfg=FrankaReachEnvCfg())
+rr.init("franka_example", spawn=True)
+env = LogRerun(env)
+env.reset()
+for _ in range(100):
+    action_np = env.action_space.sample()
+    action = torch.as_tensor(action_np)
+    env.step(action)
+```
 
 With Isaac Sim:
 ```py
