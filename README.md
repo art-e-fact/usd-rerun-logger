@@ -1,23 +1,19 @@
-## Rerun logger for USD and NVIDIA Omniverse apps
+# Rerun.io logger for USD and NVIDIA Omniverse apps
 
-# :construction: Development preview. Work in progress.
+### :construction: Development preview. Work in progress.
 
-Usage examples:
+## Usage examples:
 
-Isaac Lab environment wrapper:
-[Full source](./examples/isaac_lab_wrapper_franka.py)
+### Logging plain USD scene
 ```py
-env = gym.make("Isaac-Reach-Franka-v0", cfg=FrankaReachEnvCfg())
-rr.init("franka_example", spawn=True)
-env = LogRerun(env)
-env.reset()
-for _ in range(100):
-    action_np = env.action_space.sample()
-    action = torch.as_tensor(action_np)
-    env.step(action)
+rr.init("orange_example", spawn=True)
+stage = Usd.Stage.Open("robot.usd"))
+logger = UsdRerunLogger(stage)
+logger.log_stage()
 ```
 
-With Isaac Sim:
+
+### Logging Isaac Sim scene:
 ```py
 world = World()
 
@@ -30,7 +26,7 @@ while app_running:
     logger.log_stage()
 ```
 
-With Isaac Lab:
+### Logging Isaac Lab environment:
 ```py
 rr.init()
 logger = IsaacLabRerunLogger(env.scene)
@@ -43,21 +39,15 @@ while looping:
     logger.log_scene()
 ```
 
-## Publishing to Pypi
 
-After merging to `main`:
-
-1. checkout `main`, then:
-    * update the `unreleased` section of the CHANGELOG to reflect the new version you are going to release.
-    * update pyproject.yaml with new version number or run `uv version x.x.x` 
-    * usual `git add`, `git commit`
-    * `git tag  -a x.x.x -m "x.x.x"` 
-    * `git push` then `git push --tags`
-
-2. Build and publish to pypi (you will need a pypi token)
-```
-# Build
-uv build
-# Publish
-uv publish --token <pypi token>
+### Logging Gymnasium environment:
+```py
+env = gym.make("Isaac-Reach-Franka-v0", cfg=FrankaReachEnvCfg())
+rr.init("franka_example", spawn=True)
+env = LogRerun(env)
+env.reset()
+for _ in range(100):
+    action_np = env.action_space.sample()
+    action = torch.as_tensor(action_np)
+    env.step(action)
 ```

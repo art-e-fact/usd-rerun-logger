@@ -26,6 +26,6 @@ Core classes
    :toctree: generated
    :nosignatures:
 
+   usd_rerun_logger.usd_logger.UsdRerunLogger
    usd_rerun_logger.isaac_lab_logger.IsaacLabRerunLogger
    usd_rerun_logger.env_wrapper.LogRerun
-   usd_rerun_logger.usd_logger.UsdRerunLogger

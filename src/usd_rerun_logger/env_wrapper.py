@@ -91,6 +91,7 @@ class LogRerun(
     Start a recording every 200th step and record 100 frames each time:
 
     .. code-block:: python
+
        trigger = lambda t: t % 200 == 0
 
        # LogRerun will find the global Rerun recording with rr.get_data_recording()
@@ -100,6 +101,7 @@ class LogRerun(
     Record everything, but split into chunks of 1000 frames:
 
     .. code-block:: python
+
        # Set the recording stream directly
        recording = rr.RecordingStream("gymnasium_example")
        env = LogRerun(env, recording_length=1000, recording_stream=recording)
