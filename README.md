@@ -1,5 +1,8 @@
 # Rerun.io logger for USD and NVIDIA Omniverse apps
 
+[![Documentation](https://img.shields.io/badge/docs-online-blue)](https://art-e-fact.github.io/usd-rerun-logger/)
+[![PyPI](https://img.shields.io/pypi/v/usd-rerun-logger)](https://pypi.org/project/usd-rerun-logger/)
+
 ### :construction: Development preview. Work in progress.
 
 ## Usage examples:
