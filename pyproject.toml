@@ -37,7 +37,9 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "furo>=2025.12.19",
     "pytest>=9.0.2",
+    "sphinx>=9.0.4",
     "types-usd>=24.5.2",
     "usd-core>=25.11",
 ]

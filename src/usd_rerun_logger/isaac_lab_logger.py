@@ -1,3 +1,5 @@
+"""Rerun.io logger for Isaac Lab scenes."""
+
 import itertools
 from typing import TYPE_CHECKING
 import numpy as np
@@ -25,6 +27,104 @@ __all__ = [
 
 
 class IsaacLabRerunLogger:
+    """Logs Isaac Lab scenes to Rerun.io for visualization.
+
+    This logger is specifically designed for Isaac Lab's :class:`InteractiveScene`,
+    which contains articulations and rigid objects in a multi-environment setup.
+    It reads body poses directly from Isaac Lab's physics simulation data rather
+    than from USD transforms, ensuring accurate visualization of the simulated scene.
+
+    The logger supports multi-environment Isaac Lab scenes and allows selecting
+    which environment indices to log via the ``logged_envs`` parameter.
+
+    The recording stream can either be provided directly via ``recording_stream``, or
+    a new recording stream can be created that saves to ``save_path``. If neither is
+    provided, it will try to find it using ``rr.get_data_recording()``. ``save_path``
+    takes precedence over ``recording_stream``.
+
+    Parameters
+    ----------
+    scene:
+        The Isaac Lab :class:`InteractiveScene` to log. This scene contains the
+        articulations and rigid objects that will be visualized.
+    logged_envs:
+        Indices of environments to log (for multi-env Isaac Lab scenes). If an ``int``,
+        it is treated as a single environment index. If a list, those indices are logged.
+        Defaults to ``0`` (the first environment).
+    recording_stream:
+        The Rerun recording stream to use. Ignored if ``save_path`` is provided.
+    save_path:
+        Path where the Rerun recording will be saved as an ``.rrd`` file. If provided,
+        a new recording stream is created that saves to this path.
+    application_id:
+        Application ID for the Rerun recording. Used when creating a new recording
+        stream (either via ``save_path`` or when falling back to a new stream).
+
+    Attributes
+    ----------
+    scene : InteractiveScene
+        The Isaac Lab scene being logged.
+    recording_stream : rr.RecordingStream
+        The Rerun recording stream used for logging.
+
+    Notes
+    -----
+    - Body poses are read from Isaac Lab's simulation data (``body_pose_w``), not from
+      USD transforms. This is because Isaac Lab updates physics internally without
+      reflecting changes in the USD stage transforms.
+    - Visual geometry (meshes) is logged only once on first encounter and cached.
+    - Transforms are only re-logged when they change between calls to :meth:`log_scene`.
+    - Scale information is preserved from the original USD transforms.
+    - Prims with ``purpose`` set to ``guide`` are skipped along with their children.
+
+    Examples
+    --------
+    Log an Isaac Lab scene directly:
+
+    .. code-block:: python
+
+       import rerun as rr
+       from usd_rerun_logger import IsaacLabRerunLogger
+
+       rr.init("isaac_lab_scene", spawn=True)
+       logger = IsaacLabRerunLogger(scene)
+       logger.log_scene()
+
+    Log multiple environments:
+
+    .. code-block:: python
+
+       # Log environments 0, 1, and 2
+       logger = IsaacLabRerunLogger(scene, logged_envs=[0, 1, 2])
+       logger.log_scene()
+
+    Save the recording to a file:
+
+    .. code-block:: python
+
+       logger = IsaacLabRerunLogger(scene, save_path="simulation.rrd")
+       logger.log_scene()
+
+    Continuous logging during simulation:
+
+    .. code-block:: python
+
+       rr.init("simulation", spawn=True)
+       logger = IsaacLabRerunLogger(scene)
+
+       for step in range(1000):
+           # Step the simulation
+           scene.step()
+           # Log current state - only changed transforms are re-logged
+           rr.set_time_sequence("step", step)
+           logger.log_scene()
+
+    See Also
+    --------
+    LogRerun : Gymnasium wrapper that uses this logger for episode recording.
+    UsdRerunLogger : Logger for generic USD stages (non-Isaac Lab).
+    """
+
     def __init__(
         self,
         scene: "InteractiveScene",
@@ -33,6 +133,7 @@ class IsaacLabRerunLogger:
         save_path: str | None = None,
         application_id: str | None = None,
     ):
+        """Create the Isaac Lab Rerun logger."""
         self._scene = scene
         self._recording_stream = get_recording_stream(
             recording_stream=recording_stream,
@@ -52,13 +153,25 @@ class IsaacLabRerunLogger:
 
     @property
     def scene(self) -> "InteractiveScene":
+        """The Isaac Lab scene being logged."""
         return self._scene
 
     @property
     def recording_stream(self) -> rr.RecordingStream:
+        """The Rerun recording stream used for logging."""
         return self._recording_stream
 
     def log_scene(self):
+        """Log the current state of the Isaac Lab scene to Rerun.
+
+        Iterates over all articulations and rigid objects in the scene, reading
+        their body poses from the simulation and logging them to Rerun. Visual
+        geometry is logged only on the first call; subsequent calls only update
+        transforms that have changed.
+
+        This method is safe to call even if the scene or stage is ``None``; in
+        that case, it returns immediately without logging anything.
+        """
         if self.scene is None or self.scene.stage is None:
             return
 
