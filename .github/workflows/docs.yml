@@ -38,8 +38,6 @@ jobs:
           pip install -e .
 
       - name: Build Sphinx docs
-        env:
-          USD_RERUN_LOGGER_SKIP_CHECKS: "1"
         run: |
           make -C docs html
 
