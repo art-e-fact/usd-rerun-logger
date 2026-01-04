@@ -35,8 +35,8 @@ html_theme = "furo"
 html_static_path = ["_static"]
 
 
-# Add ./src to PYTHONPATH so autodoc can import usd_rerun_logger
-sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+# Add ../src to PYTHONPATH so autodoc can import usd_rerun_logger
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 extensions = [
     "sphinx.ext.autodoc",

@@ -39,12 +39,12 @@ jobs:
 
       - name: Build Sphinx docs
         run: |
-          make html
+          make -C docs html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _build/html
+          path: docs/_build/html
 
   deploy:
     environment:
