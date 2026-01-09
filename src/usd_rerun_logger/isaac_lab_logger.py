@@ -1,7 +1,9 @@
 """Rerun.io logger for Isaac Lab scenes."""
 
 import itertools
+from pathlib import Path
 from typing import TYPE_CHECKING
+
 import numpy as np
 import rerun as rr
 
@@ -16,8 +18,8 @@ if TYPE_CHECKING:
 from pxr import Gf, Usd, UsdGeom  # noqa: E402
 
 from .transfom import log_usd_transform  # noqa: E402
-from .visual import log_visuals  # noqa: E402
 from .util import get_recording_stream  # noqa: E402
+from .visual import log_visuals  # noqa: E402
 
 # Note: In Isaac Lab, we can't read poses directly from the USD: https://github.com/isaac-sim/IsaacLab/issues/3472#issuecomment-3299713710
 
@@ -130,7 +132,7 @@ class IsaacLabRerunLogger:
         scene: "InteractiveScene",
         logged_envs: int | list[int] = 0,
         recording_stream: rr.RecordingStream | None = None,
-        save_path: str | None = None,
+        save_path: Path | str | None = None,
         application_id: str | None = None,
     ):
         """Create the Isaac Lab Rerun logger."""

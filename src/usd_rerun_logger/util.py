@@ -49,6 +49,8 @@ def get_recording_stream(
     """
     recording_stream = rr.get_data_recording(recording_stream)
     if save_path is not None:
+        if application_id is None:
+            application_id = "usd_rerun_logger"
         recording_stream = rr.RecordingStream(application_id=application_id)
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         recording_stream.save(path=save_path)
