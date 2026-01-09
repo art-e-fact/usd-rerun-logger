@@ -226,12 +226,18 @@ class LogRerun(
     @property
     def sequence_timeline_name(self) -> str | None:
         """Get the name of the step based timeline, if any."""
-        return f"{self._timeline_name}_step" if self._timeline_name is not None else None
-    
+        return (
+            f"{self._timeline_name}_step" if self._timeline_name is not None else None
+        )
+
     @property
     def timestamp_timeline_name(self) -> str | None:
         """Get the name of the timestamp based timeline, if any."""
-        return f"{self._timeline_name}_timestamp" if self._timeline_name is not None else None
+        return (
+            f"{self._timeline_name}_timestamp"
+            if self._timeline_name is not None
+            else None
+        )
 
     def start_recording(self, timeline_name: str):
         """Start a new recording. If it is already recording, stops the current recording before starting the new one."""
