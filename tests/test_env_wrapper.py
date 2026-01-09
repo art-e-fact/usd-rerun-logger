@@ -12,6 +12,8 @@ import pytest
 import rerun as rr
 from gymnasium import spaces
 
+NUM_TIMELINES = 2 # Number of timelines created for each recording
+
 # --- Lightweight Isaac Lab & logger stubs -------------------------------------------------
 
 
@@ -96,7 +98,7 @@ def test_episode_trigger_logs_only_selected_episodes(recording):
     log_episodes = {0, 2}
 
     wrapper = LogRerun(
-        DummyIsaacEnv(max_steps=3),
+        DummyIsaacEnv(max_steps=4),
         episode_trigger=lambda episode: episode in log_episodes,
         step_trigger=lambda _: False,
     )
@@ -106,16 +108,21 @@ def test_episode_trigger_logs_only_selected_episodes(recording):
         log_episode = episode in log_episodes
         assert recording.reset_time.called == log_episode
 
-        for step in range(3):
-            _, _, terminated, _, _ = wrapper.step(0)
+        for step in range(6):
 
             if log_episode:
-                assert recording.set_time.call_args.kwargs == {
-                    "timeline": f"episode_{episode}",
-                    "duration": pytest.approx((step + 1) * wrapper.scene.physics_dt),
+                assert recording.set_time.call_args_list[-2].kwargs == {
+                    "timeline": f"episode_{episode}_timestamp",
+                    "duration": pytest.approx(step * wrapper.scene.physics_dt),
+                }
+                assert recording.set_time.call_args_list[-1].kwargs == {
+                    "timeline": f"episode_{episode}_step",
+                    "sequence": step,
                 }
             else:
                 recording.set_time.assert_not_called()
+
+            _, _, terminated, _, _ = wrapper.step(0)
 
             if terminated:
                 break
@@ -152,7 +159,7 @@ def test_episodic_trigger(episodic_trigger, recording):
     assert env.episode_trigger is not None
     assert len(timelines) == sum(
         env.episode_trigger(i) for i in range(episode_count + 1)
-    )
+    ) * NUM_TIMELINES
 
 
 def test_step_trigger(recording):
@@ -171,7 +178,7 @@ def test_step_trigger(recording):
     timelines = set(
         map(lambda call: call.kwargs["timeline"], recording.set_time.call_args_list)
     )
-    assert len(timelines) == 2
+    assert len(timelines) == 2 * NUM_TIMELINES
 
 
 def test_both_episodic_and_step_trigger(recording):
@@ -196,7 +203,7 @@ def test_both_episodic_and_step_trigger(recording):
         map(lambda call: call.kwargs["timeline"], recording.set_time.call_args_list)
     )
 
-    assert len(timelines) == 3
+    assert len(timelines) == 3 * NUM_TIMELINES
 
 
 def test_video_length(recording, recording_length: int = 10):
@@ -223,4 +230,4 @@ def test_video_length(recording, recording_length: int = 10):
     timelines = set(
         map(lambda call: call.kwargs["timeline"], recording.set_time.call_args_list)
     )
-    assert len(timelines) == 1
+    assert len(timelines) == 1 * NUM_TIMELINES
