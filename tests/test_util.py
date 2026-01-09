@@ -38,9 +38,7 @@ def test_get_recording_stream_with_save_path(get_data, stream_class):
 
 @mock.patch("usd_rerun_logger.util.rr.RecordingStream")
 @mock.patch("usd_rerun_logger.util.rr.get_data_recording")
-def test_get_recording_stream_with_custom_application_id(
-    get_data, stream_class
-):
+def test_get_recording_stream_with_custom_application_id(get_data, stream_class):
     """Should use provided application_id when creating a stream."""
     mock_stream = mock.Mock()
     get_data.return_value = None
