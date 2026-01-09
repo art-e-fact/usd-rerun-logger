@@ -12,7 +12,7 @@ import pytest
 import rerun as rr
 from gymnasium import spaces
 
-NUM_TIMELINES = 2 # Number of timelines created for each recording
+NUM_TIMELINES = 2  # Number of timelines created for each recording
 
 # --- Lightweight Isaac Lab & logger stubs -------------------------------------------------
 
@@ -109,7 +109,6 @@ def test_episode_trigger_logs_only_selected_episodes(recording):
         assert recording.reset_time.called == log_episode
 
         for step in range(6):
-
             if log_episode:
                 assert recording.set_time.call_args_list[-2].kwargs == {
                     "timeline": f"episode_{episode}_timestamp",
@@ -157,9 +156,10 @@ def test_episodic_trigger(episodic_trigger, recording):
         map(lambda call: call.kwargs["timeline"], recording.set_time.call_args_list)
     )
     assert env.episode_trigger is not None
-    assert len(timelines) == sum(
-        env.episode_trigger(i) for i in range(episode_count + 1)
-    ) * NUM_TIMELINES
+    assert (
+        len(timelines)
+        == sum(env.episode_trigger(i) for i in range(episode_count + 1)) * NUM_TIMELINES
+    )
 
 
 def test_step_trigger(recording):

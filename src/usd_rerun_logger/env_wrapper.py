@@ -156,10 +156,10 @@ class LogRerun(
             recording_length if recording_length != 0 else float("inf")
         )
 
-        self.step_id = -1 # Global step counter across episodes
-        self.episode_id = -1 # Global episode counter
+        self.step_id = -1  # Global step counter across episodes
+        self.episode_id = -1  # Global episode counter
         self._timeline_name: str | None = None
-        self._recorded_frames = 0 # Number of frames recorded in the current snippet
+        self._recorded_frames = 0  # Number of frames recorded in the current snippet
 
     def _capture_frame(self):
         """Capture a frame from the environment."""
