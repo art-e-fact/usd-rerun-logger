@@ -1,6 +1,7 @@
 """Rerun.io logger for any USD stage."""
 
 import fnmatch
+from pathlib import Path
 
 from .util import assert_usd_core_dependency
 
@@ -10,9 +11,8 @@ import rerun as rr  # noqa: E402
 from pxr import Gf, Usd, UsdGeom  # noqa: E402
 
 from .transfom import log_usd_transform  # noqa: E402
-from .visual import log_visuals  # noqa: E402
 from .util import get_recording_stream  # noqa: E402
-
+from .visual import log_visuals  # noqa: E402
 
 __all__ = [
     "UsdRerunLogger",
@@ -125,7 +125,7 @@ class UsdRerunLogger:
         stage: Usd.Stage,
         path_filter: str | list[str] | None = None,
         recording_stream: rr.RecordingStream | None = None,
-        save_path: str | None = None,
+        save_path: Path | str | None = None,
         application_id: str | None = None,
     ):
         """Create the USD Rerun logger."""
