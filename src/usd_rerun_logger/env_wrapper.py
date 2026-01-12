@@ -156,21 +156,33 @@ class LogRerun(
             recording_length if recording_length != 0 else float("inf")
         )
 
-        self.step_id = -1
-        self.episode_id = -1
+        self.step_id = -1  # Global step counter across episodes
+        self.episode_id = -1  # Global episode counter
         self._timeline_name: str | None = None
-        self._recorded_frames = 0
+        self._recorded_frames = 0  # Number of frames recorded in the current snippet
 
     def _capture_frame(self):
         """Capture a frame from the environment."""
         if self._timeline_name is None:
             return
-        timestamp = self._recorded_frames * self.logger.scene.physics_dt
-        self.logger.recording_stream.set_time(
-            timeline=self._timeline_name, duration=timestamp
-        )
+        self._update_timelines()
         self.logger.log_scene()
         self._recorded_frames += 1
+
+    def _update_timelines(self):
+        """Update the timestamp and the sequence based timelines."""
+        if self._timeline_name is None:
+            return
+        timestamp = self._recorded_frames * self.logger.scene.physics_dt
+        # It's not possible to specify the playback speed with a sequence based timeline,
+        # so we set a timestamp based timeline as well. This mimics the behavior of
+        # lerobot-dataset-viz.
+        self.logger.recording_stream.set_time(
+            timeline=self.timestamp_timeline_name, duration=timestamp
+        )
+        self.logger.recording_stream.set_time(
+            timeline=self.sequence_timeline_name, sequence=self._recorded_frames
+        )
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
@@ -211,11 +223,27 @@ class LogRerun(
         super().close()
         self.stop_recording()
 
+    @property
+    def sequence_timeline_name(self) -> str | None:
+        """Get the name of the step based timeline, if any."""
+        return (
+            f"{self._timeline_name}_step" if self._timeline_name is not None else None
+        )
+
+    @property
+    def timestamp_timeline_name(self) -> str | None:
+        """Get the name of the timestamp based timeline, if any."""
+        return (
+            f"{self._timeline_name}_timestamp"
+            if self._timeline_name is not None
+            else None
+        )
+
     def start_recording(self, timeline_name: str):
         """Start a new recording. If it is already recording, stops the current recording before starting the new one."""
         self._timeline_name = timeline_name
         self.logger.recording_stream.reset_time()
-        self.logger.recording_stream.set_time(timeline=timeline_name, timestamp=0.0)
+        self._update_timelines()
 
     def stop_recording(self):
         """Stop current recording and flush the recording stream."""
