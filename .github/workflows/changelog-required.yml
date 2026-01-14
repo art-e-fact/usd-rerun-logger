@@ -1,0 +1,43 @@
+name: Changelog Required
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  changelog-check:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if skip-changelog label is present
+        id: check-label
+        run: |
+          LABELS="${{ join(github.event.pull_request.labels.*.name, ' ') }}"
+          if echo "$LABELS" | grep -q "skip-changelog"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if CHANGELOG.md was modified
+        if: steps.check-label.outputs.skip == 'false'
+        run: |
+          # Get the list of changed files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          
+          if echo "$CHANGED_FILES" | grep -q "CHANGELOG.md"; then
+            echo "✅ CHANGELOG.md was modified"
+            exit 0
+          else
+            echo "❌ CHANGELOG.md was not modified"
+            echo ""
+            echo "Please update CHANGELOG.md with your changes under the [Unreleased] section."
+            echo "If this change does not warrant a changelog entry, add the 'skip-changelog' label to this PR."
+            exit 1
+          fi
