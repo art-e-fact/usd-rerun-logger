@@ -30,7 +30,7 @@ pip install usd-rerun-logger
 
 This util can traverse any standard USD scene and log transforms, geometries and color textures to [Rerun.io](https://rerun.io/).
 
-[API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.usd_logger.UsdRerunLogger.html#usd_rerun_logger.usd_logger.UsdRerunLogger)
+[API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.UsdRerunLogger.html#usd_rerun_logger.UsdRerunLogger)
 [executable examples](./examples/README.md#usdrerunlogger-examples)
 
 This is the lowest level logger. See UsdRerunLogger or the LogRerun wrapper for higher level APIs
@@ -67,7 +67,7 @@ while app_running:
 
 To make training faster, Isaac Lab doesn't update the USD Stage and the latest transforms are only available trough the InteractiveScene API. The `IsaacLabRerunLogger` will merge the 3D objects and initial poses from the USD stage with the transforms parsed from the InteractiveScene.
 
-[API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.isaac_lab_logger.IsaacLabRerunLogger.html)
+[API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.IsaacLabRerunLogger.html)
 
 ```py
 from usd_rerun_logger import IsaacLabRerunLogger
@@ -84,7 +84,7 @@ while looping:
 
 `LogRerun` is a drop-in replacement for Gymnasium's [RecordVideo wrapper](https://gymnasium.farama.org/api/wrappers/misc_wrappers/#gymnasium.wrappers.RecordVideo). Using Rerun.io instead of recording videos have multiple benefits, like no need to worry about camera angles, and file size doesn't increase linearly with the length of the run.
 
-[API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.env_wrapper.LogRerun.html)
+[API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.LogRerun.html)
 
 ```py
 from usd_rerun_logger import LogRerun
