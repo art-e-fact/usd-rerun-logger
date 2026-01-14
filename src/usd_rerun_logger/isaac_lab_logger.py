@@ -8,10 +8,7 @@ import numpy as np
 import rerun as rr
 
 from .util import assert_isaac_lab_dependency, assert_usd_core_dependency
-
 assert_usd_core_dependency()
-assert_isaac_lab_dependency()
-
 
 if TYPE_CHECKING:
     from isaaclab.scene import InteractiveScene  # noqa: E402
@@ -136,6 +133,9 @@ class IsaacLabRerunLogger:
         application_id: str | None = None,
     ):
         """Create the Isaac Lab Rerun logger."""
+        # Ensure Isaac Lab dependencies are available
+        assert_isaac_lab_dependency()
+
         self._scene = scene
         self._recording_stream = get_recording_stream(
             recording_stream=recording_stream,
