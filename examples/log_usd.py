@@ -1,9 +1,9 @@
 """Example: Log any USD file to Rerun.io.
 
 Usage:
-    python usd_example.py              # List available presets
-    python usd_example.py orange       # Log a preset USD
-    python usd_example.py path/to.usd  # Log a custom USD file
+    python log_usd.py              # List available presets
+    python log_usd.py orange       # Log a preset USD
+    python log_usd.py path/to.usd  # Log a custom USD file
 """
 
 import argparse
@@ -15,7 +15,7 @@ import rerun as rr
 from usd_rerun_logger import UsdRerunLogger
 
 # ============================================================================
-# Core example logic (the important part!)
+# Core example logic
 # ============================================================================
 
 
@@ -69,7 +69,7 @@ def resolve_usd_path(usd_arg: str | None) -> Path:
         for name, path in PRESETS.items():
             status = "✓" if path.exists() else "✗ (missing)"
             print(f"  {name:15} {status}")
-        print("\nUsage: python usd_example.py <preset_or_path>")
+        print("\nUsage: python log_usd.py <preset_or_path>")
         raise SystemExit(0)
 
     # Check if it's a preset name
