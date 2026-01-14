@@ -4,11 +4,39 @@
    contain the root `toctree` directive.
 
 USD Rerun Logger
-==============================
+================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+Rerun.io logger for USD, NVIDIA Isaac Sim, and Isaac Lab.
+
+.. image:: https://img.shields.io/badge/docs-online-blue
+   :target: https://art-e-fact.github.io/usd-rerun-logger/
+   :alt: Documentation
+
+.. image:: https://img.shields.io/pypi/v/usd-rerun-logger
+   :target: https://pypi.org/project/usd-rerun-logger/
+   :alt: PyPI
+
+Use this package to visualize your OpenUSD stages and Omniverse simulations with `Rerun.io <https://rerun.io/>`_.
+
+View the project on GitHub: https://github.com/art-e-fact/usd-rerun-logger
+
+Installation
+------------
+
+1. Install the logger from PyPI:
+
+   .. code-block:: bash
+
+      pip install usd-rerun-logger
+
+2. Install OpenUSD (``pxr``). This is a **user-managed dependency** to avoid version conflicts.
+
+   - **Isaac Sim / Isaac Lab**: Skip this step (it's included).
+   - **Standalone**:
+     
+     .. code-block:: bash
+
+        pip install usd-core
 
 
 .. toctree::
@@ -26,6 +54,6 @@ Core classes
    :toctree: generated
    :nosignatures:
 
-   usd_rerun_logger.usd_logger.UsdRerunLogger
-   usd_rerun_logger.isaac_lab_logger.IsaacLabRerunLogger
-   usd_rerun_logger.env_wrapper.LogRerun
+   ~usd_rerun_logger.UsdRerunLogger
+   ~usd_rerun_logger.IsaacLabRerunLogger
+   ~usd_rerun_logger.LogRerun

@@ -48,6 +48,9 @@ extensions = [
 autosummary_generate = True
 autodoc_typehints = "description"
 
+# Hide module names (e.g. usd_rerun_logger.UsdRerunLogger -> UsdRerunLogger)
+add_module_names = False
+
 autodoc_mock_imports = [
     "isaaclab",
 ]
