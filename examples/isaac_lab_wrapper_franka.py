@@ -8,6 +8,7 @@ app_launcher = AppLauncher()
 from isaaclab_tasks.manager_based.manipulation.reach.config.franka.joint_pos_env_cfg import (  # noqa: E402
     FrankaReachEnvCfg,
 )
+
 from usd_rerun_logger.env_wrapper import LogRerun  # noqa: E402
 
 env = gym.make("Isaac-Reach-Franka-v0", cfg=FrankaReachEnvCfg())
