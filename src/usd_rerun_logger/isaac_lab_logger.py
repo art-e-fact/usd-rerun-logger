@@ -8,6 +8,7 @@ import numpy as np
 import rerun as rr
 
 from .util import assert_isaac_lab_dependency, assert_usd_core_dependency
+
 assert_usd_core_dependency()
 
 if TYPE_CHECKING:
