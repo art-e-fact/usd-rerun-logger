@@ -59,6 +59,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Preset name or path to a .usd/.usda/.usdc file.",
     )
+    parser.add_argument(
+        "--rrd",
+        type=str,
+        default=None,
+        help="Path to save .rrd file instead of spawning viewer.",
+    )
     return parser.parse_args()
 
 
@@ -89,10 +95,14 @@ def main() -> None:
 
     # Initialize Rerun viewer
     app_id = usd_path.stem + "_example"
-    rr.init(app_id, spawn=True)
+    rr.init(app_id, spawn=args.rrd is None)
 
     # Log the USD (this is the example!)
     log_usd_file(usd_path)
+
+    # Save to file if requested
+    if args.rrd is not None:
+        rr.save(args.rrd)
 
 
 if __name__ == "__main__":

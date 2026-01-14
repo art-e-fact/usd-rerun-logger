@@ -1,6 +1,7 @@
 ## Development
 
 ### Publishing to Pypi
+---
 
 After merging to `main`:
 
@@ -20,9 +21,27 @@ uv publish --token <pypi token>
 ```
 
 ### Building docs
+---
 
 ```sh
 make -C docs html
 ```
 
 The [docs.yaml](./.github/workflows/docs.yml) GutHub action will build and publish the documentation after merging to main.
+
+
+### Run exampes with Artefacts
+---
+
+Install the Artefacts CLI if you don't have it yet:
+
+https://docs.artefacts.com/getting-started/
+
+Also install Isaac Lab in your virtual environment:
+
+https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html
+
+Then run the examples with:
+```sh
+artefacts run examples
+```

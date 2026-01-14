@@ -13,7 +13,57 @@ import rerun as rr
 import torch
 from isaaclab.app import AppLauncher
 
-app_launcher = AppLauncher()
+# ============================================================================
+# Environment presets (defined early for --help epilog)
+# ============================================================================
+
+PRESET_NAMES = [
+    "franka-reach",
+    "franka-cabinet",
+    "peg-insert",
+    "digit",
+    "anymal-d",
+    "spot",
+    "a1",
+    "go2",
+    "h1",
+]
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Log Isaac Lab environments to Rerun.io for visualization.",
+        epilog=f"Available presets: {', '.join(PRESET_NAMES)}",
+    )
+    parser.add_argument(
+        "env",
+        nargs="?",
+        default=None,
+        help="Preset name for the Isaac Lab environment.",
+    )
+    parser.add_argument(
+        "--steps",
+        type=int,
+        default=100,
+        help="Number of simulation steps to run (default: 100).",
+    )
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run in headless mode (no Isaac Sim GUI).",
+    )
+    parser.add_argument(
+        "--rrd",
+        type=str,
+        default=None,
+        help="Path to save .rrd file instead of spawning viewer.",
+    )
+    return parser.parse_args()
+
+
+args = parse_args()
+app_launcher = AppLauncher(headless=args.headless)
 
 from isaaclab_tasks.direct.factory.factory_env_cfg import FactoryTaskPegInsertCfg  # noqa: E402
 from isaaclab_tasks.manager_based.locomotion.velocity.config.a1.flat_env_cfg import (  # noqa: E402
@@ -87,26 +137,6 @@ def run_env(env_id: str, cfg_class: type, steps: int = 100) -> None:
 # ============================================================================
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Log Isaac Lab environments to Rerun.io for visualization.",
-        epilog=f"Available presets: {', '.join(PRESETS.keys())}",
-    )
-    parser.add_argument(
-        "env",
-        nargs="?",
-        default=None,
-        help="Preset name for the Isaac Lab environment.",
-    )
-    parser.add_argument(
-        "--steps",
-        type=int,
-        default=100,
-        help="Number of simulation steps to run (default: 100).",
-    )
-    return parser.parse_args()
-
-
 def resolve_env(env_arg: str | None) -> tuple[str, type]:
     """Resolve preset name to environment ID and config class."""
     if env_arg is None:
@@ -125,15 +155,18 @@ def resolve_env(env_arg: str | None) -> tuple[str, type]:
 
 
 def main() -> None:
-    args = parse_args()
     env_id, cfg_class = resolve_env(args.env)
 
     # Initialize Rerun viewer
     app_id = args.env + "_example"
-    rr.init(app_id, spawn=True)
+    rr.init(app_id, spawn=args.rrd is None)
 
     # Run the environment
     run_env(env_id, cfg_class, steps=args.steps)
+
+    # Save to file if requested
+    if args.rrd is not None:
+        rr.save(args.rrd)
 
 
 if __name__ == "__main__":
