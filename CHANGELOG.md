@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+ - Log both, step and timestamp based timelines in the Gymnasium wrapper https://github.com/art-e-fact/usd-rerun-logger/pull/14
+ - Fix inconsistent save_path argument in the loggers https://github.com/art-e-fact/usd-rerun-logger/pull/15
+ - Rework readme, examples and improve project automation https://github.com/art-e-fact/usd-rerun-logger/pull/16
+
 ## [0.3.0] - 2026-01-04
 
 ### Changed

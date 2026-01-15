@@ -1,0 +1,43 @@
+project: artefacts/usd-rerun-logger
+version: 0.1.0
+
+jobs:
+  examples:
+    type: test
+    package:
+      docker:
+        build:
+          dockerfile: empty
+    runtime:
+      framework: other
+      simulator: isaac_sim
+    scenarios:
+      settings:
+        # USD examples
+        - name: usd_billboard
+          run: "uv run ./examples/log_usd.py billboard --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../billboard.rrd"
+        - name: usd_colored_cube
+          run: "uv run ./examples/log_usd.py colored_cube --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../colored_cube.rrd"
+        - name: usd_orange
+          run: "uv run ./examples/log_usd.py orange --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../orange.rrd"
+        - name: usd_so101
+          run: "uv run ./examples/log_usd.py so101 --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../so101.rrd"
+        # Isaac Lab environment examples
+        - name: isaac_franka_reach
+          run: "uv run ./examples/isaac_lab_env.py franka-reach --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../franka_reach.rrd"
+        - name: isaac_franka_cabinet
+          run: "uv run ./examples/isaac_lab_env.py franka-cabinet --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../franka_cabinet.rrd"
+        - name: isaac_peg_insert
+          run: "uv run ./examples/isaac_lab_env.py peg-insert --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../peg_insert.rrd"
+        - name: isaac_digit
+          run: "uv run ./examples/isaac_lab_env.py digit --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../digit.rrd"
+        - name: isaac_anymal_d
+          run: "uv run ./examples/isaac_lab_env.py anymal-d --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../anymal_d.rrd"
+        - name: isaac_spot
+          run: "uv run ./examples/isaac_lab_env.py spot --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../spot.rrd"
+        - name: isaac_a1
+          run: "uv run ./examples/isaac_lab_env.py a1 --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../a1.rrd"
+        - name: isaac_go2
+          run: "uv run ./examples/isaac_lab_env.py go2 --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../go2.rrd"
+        - name: isaac_h1
+          run: "uv run ./examples/isaac_lab_env.py h1 --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../h1.rrd"
