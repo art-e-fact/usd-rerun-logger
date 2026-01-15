@@ -3,9 +3,9 @@
 [![Documentation](https://img.shields.io/badge/docs-online-blue)](https://art-e-fact.github.io/usd-rerun-logger/)
 [![PyPI](https://img.shields.io/pypi/v/usd-rerun-logger)](https://pypi.org/project/usd-rerun-logger/)
 
-### :construction: Development preview. Work in progress.
+### :construction: This is a development preview. Expect breaking changes before 1.0.0 :construction: 
 
-## Content
+## Contents
  - [Install](#install)
  - [Log generic USD Scenes](#log-generic-usd-scenes)
  - [Log Isaac Sim scenes](#log-isaac-sim-scenes)
@@ -14,13 +14,13 @@
 
 ## Install
 
- 1. You can install [usd-rerun-logger](https://pypi.org/project/usd-rerun-logger/)  from PyPi:
+ 1. You can install [usd-rerun-logger](https://pypi.org/project/usd-rerun-logger/)  from PyPI:
 ```
 pip install usd-rerun-logger
 ```
  2. Install OpenUSD (`pxr`). This is a **user-managed dependency** to avoid version conflicts (e.g. with `isaac-sim` which bundles its own version).
-    - If you use **Isaac Sim / Isaac Lab**: You can skip this step.
-    - If you run **Standalone**: Install the standard library from PyPi:
+    - If you use an Omniverse app like **Isaac Sim** or **Isaac Lab**: You can skip this step.
+    - Otherwise, install the standard library from PyPI:
       ```bash
       pip install usd-core
       ```
@@ -28,15 +28,16 @@ pip install usd-rerun-logger
 
 ## Log generic USD Scenes
 
-This util can traverse any standard USD scene and log transforms, geometries and color textures to [Rerun.io](https://rerun.io/).
+This utility can traverse any standard USD scene and log transforms, geometries and color textures to [Rerun.io](https://rerun.io/).
 
 [API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.UsdRerunLogger.html#usd_rerun_logger.UsdRerunLogger)
+
 [executable examples](./examples/README.md#usdrerunlogger-examples)
 
-This is the lowest level logger. See UsdRerunLogger or the LogRerun wrapper for higher level APIs
+This is the lowest level logger. See IsaacLabRerunLogger or the LogRerun wrapper for higher level APIs
 
 To log a simple scene:
-```
+```py
 from pxr import Usd
 from usd_rerun_logger import UsdRerunLogger
 
@@ -50,7 +51,7 @@ logger.log_stage()
 ```
 
 ## Log Isaac Sim scenes
-```
+```py
 from usd_rerun_logger import UsdRerunLogger
 
 rr.init("IsaacSim", spawn=True)
@@ -65,7 +66,7 @@ while app_running:
 
 ## Log Isaac Lab InteractiveScenes
 
-To make training faster, Isaac Lab doesn't update the USD Stage and the latest transforms are only available trough the InteractiveScene API. The `IsaacLabRerunLogger` will merge the 3D objects and initial poses from the USD stage with the transforms parsed from the InteractiveScene.
+To make training faster, Isaac Lab doesn't update the USD Stage and the latest transforms are only available through the InteractiveScene API. The `IsaacLabRerunLogger` will merge the 3D objects and initial poses from the USD stage with the transforms parsed from the InteractiveScene.
 
 [API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.IsaacLabRerunLogger.html)
 
@@ -82,7 +83,7 @@ while looping:
 
 ## Log Gymnasium environments
 
-`LogRerun` is a drop-in replacement for Gymnasium's [RecordVideo wrapper](https://gymnasium.farama.org/api/wrappers/misc_wrappers/#gymnasium.wrappers.RecordVideo). Using Rerun.io instead of recording videos have multiple benefits, like no need to worry about camera angles, and file size doesn't increase linearly with the length of the run.
+`LogRerun` is a drop-in replacement for Gymnasium's [RecordVideo wrapper](https://gymnasium.farama.org/api/wrappers/misc_wrappers/#gymnasium.wrappers.RecordVideo). Using Rerun.io instead of recording videos has multiple benefits, like no need to worry about camera angles, and file size doesn't increase linearly with the length of the run.
 
 [API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.LogRerun.html)
 
@@ -101,6 +102,6 @@ for _ in range(100):
 
 
 ### Known limitations
- - Not all shaders are supported. In OpenUSD, color textures can be represented in a  wide variety of ways, many of them specific to certain implementation. We try to support as many shader formats as possible. Please open an issue when you have a .usd* file the we fail to parse properly.
+ - Not all shaders are supported. In OpenUSD, color textures can be represented in a  wide variety of ways, many of them specific to certain implementations. We try to support as many shader formats as possible. Please open an issue when you have a .usd* file that we fail to parse properly.
 
 Also, see the [issues](https://github.com/art-e-fact/usd-rerun-logger/issues) for features we're still working on.
