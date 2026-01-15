@@ -32,7 +32,7 @@ This utility can traverse any standard USD scene and log transforms, geometries 
 
 [API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.UsdRerunLogger.html#usd_rerun_logger.UsdRerunLogger)
 
-[executable examples](./examples/README.md#usdrerunlogger-examples)
+[Executable examples](./examples/README.md#usdrerunlogger-examples)
 
 This is the lowest level logger. See IsaacLabRerunLogger or the LogRerun wrapper for higher level APIs
 
