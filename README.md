@@ -12,6 +12,14 @@
  - [Log Isaac Lab InteractiveScenes](#log-isaac-lab-interactivescenes)
  - [Wrap Gymnasium environments](#log-gymnasium-environments)
 
+
+
+
+https://github.com/user-attachments/assets/82e33c38-f8a1-4f3b-8c7f-5c28904d86b5
+
+
+
+
 ## Install
 
  1. You can install [usd-rerun-logger](https://pypi.org/project/usd-rerun-logger/)  from PyPI:
