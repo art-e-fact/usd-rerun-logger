@@ -87,6 +87,8 @@ while looping:
 
 [API reference](https://art-e-fact.github.io/usd-rerun-logger/generated/usd_rerun_logger.LogRerun.html)
 
+[Executable examples](./examples/README.md#isaac-lab-gymnasium-wrapper-examples)
+
 ```py
 from usd_rerun_logger import LogRerun
 
