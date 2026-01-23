@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Implement loading textrure maps from URLs: https://github.com/art-e-fact/usd-rerun-logger/pull/17
+
+## [0.4.0] - 2026-01-15
+
+### Changed
+
  - Log both, step and timestamp based timelines in the Gymnasium wrapper https://github.com/art-e-fact/usd-rerun-logger/pull/14
  - Fix inconsistent save_path argument in the loggers https://github.com/art-e-fact/usd-rerun-logger/pull/15
  - Rework readme, examples and improve project automation https://github.com/art-e-fact/usd-rerun-logger/pull/16

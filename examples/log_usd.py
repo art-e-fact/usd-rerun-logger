@@ -45,6 +45,7 @@ PRESETS: dict[str, Path] = {
     "colored_cube": ASSETS_DIR / "colored_cube.usda",
     "orange": ASSETS_DIR / "Orange001" / "Orange001.usda",
     "so101": ASSETS_DIR / "so101_follower.usda",
+    "spot": ASSETS_DIR / "spot.usd",
 }
 
 
