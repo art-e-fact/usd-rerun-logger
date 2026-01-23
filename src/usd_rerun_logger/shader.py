@@ -58,9 +58,7 @@ def _resolve_asset_path(asset_path) -> str | None:
 
     path = asset_path.path
     if path:
-        # Check if it's a URL
         if is_url(path):
-            print(f"_resolve_asset_path: Downloading texture from URL: {path}")
             return download_image(path)
 
         if os.path.exists(path):
