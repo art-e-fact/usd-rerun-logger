@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Implement loading textrure maps from URLs: https://github.com/art-e-fact/usd-rerun-logger/pull/17
+- Implement loading textrure maps from URLs: https://github.com/art-e-fact/usd-rerun-logger/pull/19
 
 ## [0.4.0] - 2026-01-15
 
