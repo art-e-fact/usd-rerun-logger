@@ -1,7 +1,14 @@
 """Utility helpers for usd-rerun-logger."""
 
+import hashlib
 import importlib
+import os
 from pathlib import Path
+import tempfile
+from urllib.error import URLError
+from urllib.parse import urlparse
+from urllib.request import urlopen
+from PIL import Image
 import rerun as rr
 
 
@@ -63,3 +70,69 @@ def get_recording_stream(
         )
 
     return recording_stream
+
+
+def _get_cache_dir() -> str:
+    """Get or create the usd_rerun_logger cache directory in the system's tmp folder."""
+    cache_dir = os.path.join(tempfile.gettempdir(), "usd_rerun_logger")
+    os.makedirs(cache_dir, exist_ok=True)
+    return cache_dir
+
+
+def download_image(url: str) -> str | None:
+    """
+    Download an image from a URL to the cache directory.
+    Returns the local file path if successful, None otherwise.
+    """
+    cache_dir = _get_cache_dir()
+
+    # Create a unique filename based on the URL hash
+    url_hash = hashlib.md5(url.encode()).hexdigest()
+    # Try to preserve the original extension
+    parsed = urlparse(url)
+    path_parts = parsed.path.rsplit(".", 1)
+    ext = f".{path_parts[1]}" if len(path_parts) > 1 else ""
+    cached_path = os.path.join(cache_dir, f"{url_hash}{ext}")
+
+    # Return cached file if it already exists
+    if os.path.exists(cached_path):
+        return cached_path
+
+    try:
+        # Download the file
+        with urlopen(url, timeout=30) as response:
+            data = response.read()
+
+        # Write to a temporary file first, then verify it's an image
+        temp_path = cached_path + ".tmp"
+        with open(temp_path, "wb") as f:
+            f.write(data)
+
+        # Verify it's a valid image using PIL
+        try:
+            with Image.open(temp_path) as img:
+                img.verify()  # Verify it's a valid image
+        except Exception as e:
+            print(f"Downloaded file is not a valid image: {url} - {e}")
+            os.remove(temp_path)
+            return None
+
+        # Move temp file to final location
+        os.rename(temp_path, cached_path)
+        return cached_path
+
+    except URLError as e:
+        print(f"Failed to download image from {url}: {e}")
+        return None
+    except Exception as e:
+        print(f"Error downloading image from {url}: {e}")
+        return None
+
+
+def is_url(path: str) -> bool:
+    """Check if the given path is a URL."""
+    try:
+        parsed = urlparse(path)
+        return parsed.scheme in ("http", "https")
+    except Exception:
+        return False

@@ -22,6 +22,8 @@ jobs:
           run: "uv run ./examples/log_usd.py orange --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../orange.rrd"
         - name: usd_so101
           run: "uv run ./examples/log_usd.py so101 --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../so101.rrd"
+        - name: usd_spot
+          run: "uv run ./examples/log_usd.py spot --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../spot.rrd"
         # Isaac Lab environment examples
         - name: isaac_franka_reach
           run: "uv run ./examples/isaac_lab_env.py franka-reach --steps 100 --headless --rrd ${ARTEFACTS_SCENARIO_UPLOAD_DIR}/../franka_reach.rrd"
