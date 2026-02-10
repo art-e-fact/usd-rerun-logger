@@ -12,6 +12,7 @@ from pathlib import Path
 from pxr import Usd
 import rerun as rr
 
+from screenshot import Screenshot
 from usd_rerun_logger import UsdRerunLogger
 
 # ============================================================================
@@ -28,9 +29,12 @@ def log_usd_file(usd_path: str | Path) -> None:
         logger = UsdRerunLogger(stage)
         logger.log_stage()
     """
+    screenshot = Screenshot()
     stage = Usd.Stage.Open(str(usd_path))
     logger = UsdRerunLogger(stage)
     logger.log_stage()
+    screenshot.take("screenshot.png")
+    screenshot.stop()
 
 
 # ============================================================================
@@ -65,6 +69,12 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="Path to save .rrd file instead of spawning viewer.",
+    )
+    parser.add_argument(
+        "--snapshot",
+        type=str,
+        default=None,
+        help="Path to save a screenshot of the viewer window after logging.",
     )
     return parser.parse_args()
 
