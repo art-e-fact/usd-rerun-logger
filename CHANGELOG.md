@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Implement loading textrure maps from URLs: https://github.com/art-e-fact/usd-rerun-logger/pull/19
+- Relax gymnasium dependency to avoid conflict with isaaclab==2.3.2.post1
 
 ## [0.4.0] - 2026-01-15
 
