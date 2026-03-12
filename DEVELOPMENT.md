@@ -7,7 +7,7 @@ After merging to `main`:
 
 1. checkout `main`, then:
     * update the `unreleased` section of the CHANGELOG to reflect the new version you are going to release.
-    * update pyproject.yaml with new version number or run `uv version x.x.x` 
+    * run `uv version x.x.x` 
     * usual `git add`, `git commit`
     * `git tag  -a x.x.x -m "x.x.x"` 
     * `git push` then `git push --tags`
