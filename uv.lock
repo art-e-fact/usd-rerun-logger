@@ -1363,7 +1363,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "gymnasium", extras = ["other"], specifier = ">=1.2.3" },
+    { name = "gymnasium", extras = ["other"], specifier = ">=1.2.0" },
     { name = "pillow", specifier = ">=11.2.1" },
     { name = "rerun-sdk", specifier = ">=0.23.1" },
 ]
